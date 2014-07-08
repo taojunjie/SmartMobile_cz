@@ -1,0 +1,379 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.view.pop;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import jsqlite.Exception;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.adapter.ExAdapter;
+import com.android.smartmobile.cz.adapter.ExListTypeAdapter;
+import com.android.smartmobile.cz.adapter.ExRightTitleAdapter;
+import com.android.smartmobile.cz.adapter.LegendAdapter;
+import com.android.smartmobile.cz.adapter.ResultListAdapter;
+import com.android.smartmobile.cz.adapter.RightListAdapter;
+import com.android.smartmobile.cz.bean.AddressBean;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.bean.SubLayer;
+import com.android.smartmobile.cz.bean.TitleBean;
+import com.android.smartmobile.cz.db.SDBHelper;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.model.BaseActivity;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.service.PullParseConfigService;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.MapHelper;
+import com.android.smartmobile.cz.util.SymbolUtil;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.android.smartmobile.cz.view.MainMapView;
+import com.esri.android.map.GraphicsLayer;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.Polygon;
+import com.esri.core.map.Graphic;
+import com.esri.core.map.Legend;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.gesture.GestureOverlayView;
+import android.gesture.GestureOverlayView.OnGestureListener;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.Spinner;
+
+/**
+ * 
+ * @ClassName: PopListManager
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月3日 下午19:52:17
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class PopRightTitleManager implements InitActivity, OnTouchListener,
+		android.view.GestureDetector.OnGestureListener {
+	private Context mContext;
+	private MapView mapView = null;
+	// 声明PopupWindow对象的引用
+	private PopupWindow popupWindow = null;
+	private ExpandableListView expandableListView;
+	private ExRightTitleAdapter exListTypeAdapter;
+	private Handler mHandler = new Handler();
+	private GestureDetector mGestureDetector;
+	private static final int FLING_MIN_DISTANCE = 100;
+	private static final int FLING_MIN_VELOCITY = 200;
+	private List<TitleBean> titleBeans;
+
+	public void setPopupWindow(PopupWindow popupWindow) {
+		this.popupWindow = popupWindow;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param mainMapView
+	 */
+	public PopRightTitleManager(Context context, MapView mainMapView) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mapView = mapView;
+		mGestureDetector = new GestureDetector(this);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+
+	}
+
+	/***
+	 * 获取PopupWindow实例
+	 */
+	public PopupWindow getPopupWindow() {
+		return popupWindow;
+	}
+
+	public void init(final List<TitleBean> titleBeans) {
+		LogUtil.LoLoLog().e(
+				"titleBeans----------------------" + titleBeans.size());
+		// TODO Auto-generated method stub
+
+		// 获取自定义布局文件pop.xml的视图
+		View popupWindow_view = LayoutInflater.from(mContext).inflate(
+				R.layout.layout_right_title, null);
+		// 创建PopupWindow实例,200,150分别是宽度和高度
+		popupWindow = new PopupWindow(popupWindow_view, 300,
+				LayoutParams.MATCH_PARENT);
+		// 设置动画效果
+		popupWindow.setAnimationStyle(R.style.AnimationFade);
+		// popupWindow.setBackgroundDrawable(new BitmapDrawable());
+		popupWindow.setOutsideTouchable(true);
+		popupWindow.setFocusable(true);
+		popupWindow.setTouchable(true);
+		popupWindow.update();
+		// 点击其他地方消失
+
+		popupWindow_view.setOnTouchListener(new OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if (event.getAction() == MotionEvent.ACTION_UP) {
+					popupWindow.setFocusable(false);
+				} else {
+					popupWindow.setFocusable(true);
+					popupWindow.setOutsideTouchable(true);
+				}
+				popupWindow.update();
+				return false;
+			}
+		});
+
+		// pop.xml视图里面的控件
+
+		expandableListView = (ExpandableListView) popupWindow_view
+				.findViewById(R.id.ex_right_title);
+		expandableListView.setOnTouchListener(this);
+		expandableListView.setGroupIndicator(null);
+		expandableListView.setDivider(null);
+		exListTypeAdapter = new ExRightTitleAdapter(mContext, titleBeans,
+				mapView);
+		expandableListView.setAdapter(exListTypeAdapter);
+		int groupCount = expandableListView.getCount();
+
+		for (int i = 0; i < groupCount; i++) {
+
+			expandableListView.expandGroup(i);
+
+		}
+		expandableListView.setOnChildClickListener(new OnChildClickListener() {
+
+			@Override
+			public boolean onChildClick(ExpandableListView parent, View v,
+					int groupPosition, int childPosition, long id) {
+				// TODO Auto-generated method stub
+				String name = titleBeans.get(groupPosition).getGroupLayers()
+						.get(childPosition).getName();
+
+				addPolygonToGraphicsLayer(titleBeans.get(groupPosition)
+						.getGroupLayers().get(childPosition),
+						MyApplication.mApp.rimGraphicsLayer, true);
+				PopGestureManager popGestureManager = new PopGestureManager(
+						mContext, mapView);
+				if (null != popGestureManager.getPopupWindow()) {
+					popGestureManager.getPopupWindow().dismiss();
+					popGestureManager.setPopupWindow(null);
+					return true;
+				} else {
+					popGestureManager.init(titleBeans.get(groupPosition)
+							.getGroupLayers().get(childPosition));
+					int[] location = new int[2];
+
+					Constants.ll_right_menu.getLocationOnScreen(location);
+
+					popGestureManager.getPopupWindow().showAtLocation(
+							Constants.ll_right_menu,
+							Gravity.NO_GRAVITY,
+							location[0]
+									- popGestureManager.getPopupWindow()
+											.getWidth() + 70, location[1]);
+
+				}
+
+				return false;
+			}
+		});
+		expandableListView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				// TODO Auto-generated method stub
+				// ToastUtil.makeToastInBottom(mList.get(arg2));
+
+			}
+		});
+
+	}
+
+	/**
+	 * 将面绘制到图层上
+	 * 
+	 * @param addressBean
+	 * @param graphicsLayer
+	 * @param isLocation
+	 */
+	public void addPolygonToGraphicsLayer(AddressBean addressBean,
+
+	GraphicsLayer graphicsLayer, boolean isLocation) {
+
+		String polygonString = addressBean.getGeometry();
+		if (polygonString == null || polygonString.equalsIgnoreCase(""))
+			return;
+		if (graphicsLayer == null) {
+			graphicsLayer = new GraphicsLayer();
+			mapView.addLayer(graphicsLayer);
+		}
+		graphicsLayer.removeAll();
+		String multiplygonString = polygonString
+				.replaceFirst("MULTIPOLYGON", "").replaceAll("\\(\\(\\(", "")
+				.replaceAll("\\)\\)\\)", "");
+		// LogUtil.LoLoLog().e(multiplygonString);
+
+		String[] multiplygon = multiplygonString.trim().split("\\)\\), \\(\\(");
+		Graphic graphic = null;
+		Map<String, Object> map = null;
+		Polygon polygon = null;
+		List<Geometry> geometries = new ArrayList<Geometry>();
+		for (String string : multiplygon) {
+			String[] pointStringArray = string.split(",");
+			polygon = new Polygon();
+
+			for (int index = 0; index < pointStringArray.length; index++) {
+				String pointString = pointStringArray[index];
+
+				String[] point = pointString.trim().split(" ");
+				if (0 == index) {
+
+					polygon.startPath(Double.parseDouble(point[0]),
+							Double.parseDouble(point[1]));
+				} else {
+					try {
+						polygon.lineTo(Double.parseDouble(point[0]),
+								Double.parseDouble(point[1]));
+					} catch (NumberFormatException e) {
+						// TODO: handle exception
+						LogUtil.LoLoLog().d(
+								"id:" + addressBean.getId() + "----  name:"
+										+ addressBean.getName());
+					}
+
+				}
+				// polygon.setXY(index, Double.parseDouble(point[0]),
+				// Double.parseDouble(point[1]));
+			}
+
+			geometries.add(polygon);
+			map = new HashMap<String, Object>();
+			map.put("ID", addressBean.getId());
+			map.put("NAME", addressBean.getName());
+			map.put("TABLENAME", addressBean.getTableName());
+			map.put("CENTROID", addressBean.getCentroid());
+			graphic = new Graphic(polygon,
+					new SymbolUtil(mContext).getPolygonAllSymbol1(), map, null);
+			// graphicsLayer.addGraphic(graphic);
+
+			MapHelper.flashGeometrys(mapView, geometries, graphicsLayer, false);
+
+		}
+
+	}
+
+	void initDa() {
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void initView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		// TODO Auto-generated method stub
+		return mGestureDetector.onTouchEvent(event);
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+			float velocityY) {
+		// TODO Auto-generated method stub
+		if (e2.getX() - e1.getX() > FLING_MIN_DISTANCE
+				&& Math.abs(velocityX) > FLING_MIN_VELOCITY) {
+			// 当像右侧滑动的时候
+			popupWindow.dismiss();
+			popupWindow = null;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean onDown(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+			float distanceY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+}

@@ -1,0 +1,224 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.view.pop;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.adapter.ExAdapter;
+import com.android.smartmobile.cz.adapter.LegendAdapter;
+import com.android.smartmobile.cz.adapter.ResultListAdapter;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.service.PullParseConfigService;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.android.smartmobile.cz.view.MainMapView;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.esri.core.map.Legend;
+
+import android.content.Context;
+import android.os.Handler;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.Spinner;
+
+/**
+ * 
+ * @ClassName: PopListManager
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月3日 下午19:52:17
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class PopGestureManager implements InitActivity, OnTouchListener {
+	private Context mContext;
+	private MapView mainMapView = null;
+	// 声明PopupWindow对象的引用
+	private PopupWindow popupWindow = null;
+	private EditText edit_gesture;
+	private ListView lv_gesture;
+	private ResultListAdapter resultListAdapter;
+	private List<String> mList;
+	private Handler mHandler = new Handler();
+
+	public void setPopupWindow(PopupWindow popupWindow) {
+		this.popupWindow = popupWindow;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param mainMapView
+	 */
+	public PopGestureManager(Context context, MapView mainMapView) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mainMapView = mainMapView;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+		mList = new ArrayList<String>();
+		for (int i = 0; i < 30; i++) {
+			mList.add(i + ".this is a test ");
+		}
+
+	}
+
+	/***
+	 * 获取PopupWindow实例
+	 */
+	public PopupWindow getPopupWindow() {
+		return popupWindow;
+	}
+
+	/**
+	 * 创建PopupWindow
+	 */
+	@Override
+	public void initView() {
+
+		initData();
+		// TODO Auto-generated method stub
+
+		// 获取自定义布局文件pop.xml的视图
+		View popupWindow_view = LayoutInflater.from(mContext).inflate(
+				R.layout.pop_gesture, null, false);
+		// 创建PopupWindow实例,200,150分别是宽度和高度
+		popupWindow = new PopupWindow(popupWindow_view, 400,
+				LayoutParams.MATCH_PARENT);
+		// 设置动画效果
+		popupWindow.setAnimationStyle(R.style.AnimationFade_web);
+		// 点击其他地方消失
+		// popupWindow_view.setOnTouchListener(new OnTouchListener() {
+		// @Override
+		// public boolean onTouch(View v, MotionEvent event) {
+		// // TODO Auto-generated method stub
+		// if (popupWindow != null && popupWindow.isShowing()) {
+		// popupWindow.dismiss();
+		// popupWindow = null;
+		// }
+		// return false;
+		// }
+		//
+		// });
+		popupWindow.setOutsideTouchable(false);
+		// pop.xml视图里面的控件
+
+		edit_gesture = (EditText) popupWindow_view
+				.findViewById(R.id.edit_gesture);
+		edit_gesture.setOnTouchListener(new OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				popupWindow.setFocusable(true);
+				popupWindow.update();
+				edit_gesture.setFocusableInTouchMode(true);
+				return false;
+			}
+		});
+		edit_gesture.setOnFocusChangeListener(new OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (hasFocus) {
+					popupWindow.setFocusable(true);
+					popupWindow.update();
+				} else {
+					popupWindow.setFocusable(false);
+					popupWindow.setOutsideTouchable(false);
+					popupWindow.update();
+				}
+			}
+		});
+		lv_gesture = (ListView) popupWindow_view.findViewById(R.id.lv_gesture);
+		lv_gesture.setOnTouchListener(this);
+		resultListAdapter = new ResultListAdapter(mContext, mList);
+		lv_gesture.setAdapter(resultListAdapter);
+
+		lv_gesture.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				// TODO Auto-generated method stub
+				ToastUtil.makeToastInBottom(mList.get(arg2));
+			}
+		});
+
+		popupWindow_view.findViewById(R.id.btn_gesture_close)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						if (popupWindow != null && popupWindow.isShowing()) {
+							popupWindow.dismiss();
+							popupWindow = null;
+						}
+					}
+				});
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.view.View.OnTouchListener#onTouch(android.view.View,
+	 * android.view.MotionEvent)
+	 */
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		// TODO Auto-generated method stub
+		if (event.getAction() == MotionEvent.ACTION_UP) {
+			popupWindow.setFocusable(false);
+			popupWindow.setOutsideTouchable(false);
+		} else {
+			popupWindow.setFocusable(true);
+		}
+		popupWindow.update();
+		return false;
+	}
+}

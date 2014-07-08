@@ -1,0 +1,384 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.view;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.adapter.ExAdapter;
+import com.android.smartmobile.cz.adapter.ExListTypeAdapter;
+import com.android.smartmobile.cz.adapter.ResultListAdapter;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.bean.GroupLayer;
+import com.android.smartmobile.cz.bean.Layer;
+import com.android.smartmobile.cz.db.SDBHelper;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.model.BaseActivity;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.service.PullParseConfigMapService;
+import com.android.smartmobile.cz.service.PullParseConfigService;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.StringUtil;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.android.smartmobile.cz.view.MainMapView;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.google.inject.Inject;
+
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AbsListView.OnScrollListener;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AbsListView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+
+/**
+ * 
+ * @ClassName: PopListManager
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月3日 下午19:52:17
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class MainLeftListView extends BaseActivity implements InitActivity,
+		OnClickListener {
+	private Context mContext;
+	private MapView mainMapView = null;
+	private EditText edit_search;
+	private Button btn_list_type, btn_list_close;
+	private ListView mListView;
+	private String[] presidents;
+	private ResultListAdapter resultListAdapter;
+	private LinearLayout ll_main_list_left;
+	private RelativeLayout main_list_left_content;
+	private List<String> mList;
+	private List<Catalog> catalogs = null;
+	private Handler mHandler = new Handler();
+	private SDBHelper sdbHelper;
+
+	/**
+	 * 
+	 * @param context
+	 * @param mainMapView
+	 */
+	public MainLeftListView(Context context, MapView mainMapView,
+			LinearLayout ll_main_list_left) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mainMapView = mainMapView;
+		this.ll_main_list_left = ll_main_list_left;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+		mList = new ArrayList<String>();
+		// for (int i = 0; i < 30; i++) {
+		// mList.add(i + ".this is a test ");
+		// }
+
+		presidents = mContext.getResources().getStringArray(
+				R.array.presidents_array);
+
+		try {
+			// PullParseConfigMapService.getInstance();
+
+			catalogs = PullParseConfigMapService.getCatalogs();
+
+			// mList = catalogs.get(0).getGroupLayers().get(0).toList();
+		//	mList = getData("PGIS_address", "");
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	class GetDataAsyncTask extends AsyncTask<String, Void, List<String>> {
+
+		ProgressDialog pdialog;
+
+		@Override
+		protected void onPostExecute(List<String> result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+
+			if (result != null && result.size() != 0) {
+				resultListAdapter = new ResultListAdapter(mContext, result);
+				mListView.setAdapter(resultListAdapter);
+			} else {
+				ToastUtil.makeToastInBottom("没有数据");
+			}
+
+			if (pdialog.isShowing()) {
+				pdialog.dismiss();
+			}
+
+		}
+
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+			pdialog = new ProgressDialog(mContext);
+			pdialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+			pdialog.setMessage("正在查询...");
+			pdialog.show();
+		}
+
+		@Override
+		protected List<String> doInBackground(String... params) {
+			// TODO Auto-generated method stub
+
+			return getData(params[0], params[1]);
+		}
+
+	}
+
+	/**
+	 * 根据查询条件查询
+	 * 
+	 * @param condition
+	 * @return
+	 */
+	List<String> getData(String tableName, String condition) {
+		List<String> list = new ArrayList<String>();
+		sdbHelper = new SDBHelper();
+		List<HashMap<String, String>> listHashMaps;
+		try {
+			listHashMaps = sdbHelper.getResultByName(tableName, condition);
+			if (listHashMaps == null || listHashMaps.size() == 0)
+				return null;
+			for (int i = 0; i < listHashMaps.size(); i++) {
+				HashMap<String, String> map = listHashMaps.get(i);
+				Set<String> set = map.keySet();
+				for (String key : set) {
+				
+					LogUtil.LoLoLog().d(key + "----" + map.get(key));
+
+					if (key.equalsIgnoreCase("TEXTSTRING")) {
+						list.add(map.get(key));
+					}
+				}
+			}
+		} catch (jsqlite.Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return list;
+	}
+
+	@Override
+	public void initView() {
+
+		initData();
+
+		main_list_left_content = (RelativeLayout) ll_main_list_left
+				.findViewById(R.id.main_list_left_content);
+
+		// pop.xml视图里面的控件
+		mListView = (ListView) main_list_left_content
+				.findViewById(R.id.lv_list);
+		mListView.setDivider(null);
+		// 列表按钮
+		btn_list_type = (Button) main_list_left_content
+				.findViewById(R.id.btn_list_type);
+		btn_list_type
+				.setText(catalogs.get(0).getGroupLayers().get(0).getName());
+		// 关闭按钮
+		btn_list_close = (Button) main_list_left_content
+				.findViewById(R.id.btn_list_close);
+
+		edit_search = (EditText) main_list_left_content
+				.findViewById(R.id.edit_list);
+
+		new GetDataAsyncTask().execute("PGIS_address", "");
+
+		mListView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				// if (null != popupWindow) {
+				// popupWindow.setFocusable(false);
+				// popupWindow.setOutsideTouchable(false);
+				// popupWindow.update();
+				// }
+
+				// popupWindow.setFocusable(true);
+				// popupWindow.update();
+				// TODO Auto-generated method stub
+				ToastUtil.makeToastInBottom(mList.get(arg2));
+				LogUtil.LoLoLog().d(mList.get(arg2));
+			}
+		});
+
+		btn_list_type.setOnClickListener(this);
+		btn_list_close.setOnClickListener(this);
+
+		edit_search.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				// TODO Auto-generated method stub
+				if (StringUtil.isEmpty(s.toString()))
+					return;
+
+				// 异步查询
+				new GetDataAsyncTask().execute("PGIS_address", s.toString());
+
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.view.View.OnTouchListener#onTouch(android.view.View,
+	 * android.view.MotionEvent)
+	 */
+
+	void showListTypePopWindow() {
+		View popupWindow_view = LayoutInflater.from(mContext).inflate(
+				R.layout.dialog_list_type, null, false);
+		// 创建PopupWindow实例,200,150分别是宽度和高度
+		PopupWindow popup = new PopupWindow(popupWindow_view, 300, 400);
+		// MyApplication.mApp.popupWindows.add(popupWindow);
+		// 设置动画效果
+		popup.setBackgroundDrawable(new BitmapDrawable());
+		// popup.setAnimationStyle(R.style.AnimationFade);
+		popup.setOutsideTouchable(true);
+		popup.setFocusable(true);
+		popup.update();
+		int[] location = new int[2];
+
+		btn_list_type.getLocationOnScreen(location);
+		popup.showAtLocation(Constants.ll_left_menu, Gravity.NO_GRAVITY,
+				location[0] + 360, location[1]);
+
+		ExpandableListView expandableListView = (ExpandableListView) popupWindow_view
+				.findViewById(R.id.ex_pop_list_type);
+		expandableListView.setGroupIndicator(null);// 取消默认的ExpandableListview的默认指示的图标;;;
+		expandableListView.setAdapter(new ExListTypeAdapter(mContext, catalogs,
+				mainMapView));
+		expandableListView.setOnChildClickListener(new OnChildClickListener() {
+
+			@Override
+			public boolean onChildClick(ExpandableListView parent, View v,
+					int groupPosition, int childPosition, long id) {
+				// TODO Auto-generated method stub
+				GroupLayer groupLayer = catalogs.get(groupPosition)
+						.getGroupLayers().get(childPosition);
+				mList = groupLayer.toList();
+				int size = mList.size();
+				resultListAdapter = new ResultListAdapter(mContext, mList);
+				mListView.setAdapter(resultListAdapter);
+				btn_list_type.setText(groupLayer.getName());
+				return true;
+			}
+		});
+		// 将所有项设置成默认展开
+
+		expandableListView.setDivider(null);
+
+		int groupCount = expandableListView.getCount();
+
+		for (int i = 0; i < groupCount; i++) {
+			expandableListView.expandGroup(i);
+		}
+	}
+
+	@Override
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		switch (v.getId()) {
+		case R.id.btn_list_type:
+
+			mHandler.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					showListTypePopWindow();
+				}
+			}, 200);
+			break;
+		case R.id.btn_list_close:
+			ll_main_list_left.setVisibility(View.GONE);
+			break;
+
+		default:
+			break;
+		}
+	}
+}

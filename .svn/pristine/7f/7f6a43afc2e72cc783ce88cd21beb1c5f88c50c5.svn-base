@@ -1,0 +1,39 @@
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>js&android</title>
+<script language="javascript">
+	function show(index) {
+		if(index==1){
+			var a = document.getElementById("text").value;
+			alert(a);
+		}else if(index==2){
+			var a = document.getElementById("location").value;
+			alert(a);
+		}else{
+			alert("Nothing");
+		}
+		
+
+	}
+	function show_location() {
+		var a = document.getElementById("location").value;
+		alert(a);
+
+	}
+</script>
+</head>
+<body>
+	<form action="">
+		<input type="text" id="text" value="test" /> <input type="button"
+			id="button" onclick="window.demo.clickOnAndroid(1)" value="获取输入值" /><br />
+
+		<input type="button" id="location"
+			onclick="window.demo.clickOnAndroid(2)" value="定位" /><br />
+
+
+	</form>
+
+</body>
+</html>

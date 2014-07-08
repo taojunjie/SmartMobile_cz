@@ -1,0 +1,432 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.view;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.adapter.ExListTypeAdapter;
+import com.android.smartmobile.cz.adapter.ResultListAdapter;
+import com.android.smartmobile.cz.bean.AddressBean;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.bean.GeoType;
+import com.android.smartmobile.cz.bean.SubLayer;
+import com.android.smartmobile.cz.db.SDBHelper;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.model.BaseActivity;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.service.PullParseConfigMapService;
+import com.android.smartmobile.cz.thread.AsyncQueryTask;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.MapHelper;
+import com.android.smartmobile.cz.util.StringUtil;
+import com.android.smartmobile.cz.util.SymbolUtil;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.android.smartmobile.cz.view.pop.PopGestureManager;
+import com.esri.android.map.Callout;
+import com.esri.android.map.CalloutStyle;
+import com.esri.android.map.GraphicsLayer;
+import com.esri.android.map.MapView;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.Polygon;
+import com.esri.core.map.Graphic;
+import com.esri.core.symbol.MarkerSymbol;
+import com.esri.core.symbol.PictureMarkerSymbol;
+import com.esri.core.symbol.SimpleFillSymbol;
+import com.esri.core.symbol.SimpleLineSymbol;
+import com.smartmobile.sdk.graphics.PlottingTouchlistener;
+
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+
+/**
+ * 
+ * @ClassName: PopListManager
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月3日 下午19:52:17
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class MainLeftListView implements InitActivity, OnClickListener {
+	private Context mContext;
+	private MapView mapView = null;
+	private MapHelper mapHelper = null;
+	private EditText edit_search;
+	private Button btn_list_close, btn_buttom_more, btn_list_search;
+	private ProgressBar pb_buttom_more;
+	private ListView mListView;
+	private String[] presidents;
+	private ResultListAdapter resultListAdapter;
+	private LinearLayout ll_main_list_left;
+	private RelativeLayout main_list_left_content;
+	private List<AddressBean> mList;
+	private List<SubLayer> subLayers = null;
+	private PopGestureManager popGestureManager;
+	private Handler mHandler = new Handler();
+	private SDBHelper sdbHelper;
+	private Spinner mSpinner;
+	private SubLayer currentSubLayer;
+	private GraphicsLayer keyGraphicsLayer;
+	private String cum = "";
+	private int cum_index = 0;
+	// ListView底部View
+	private View moreView;
+
+	/**
+	 * 
+	 * @param context
+	 * @param mainMapView
+	 */
+	public MainLeftListView(Context context, MapView mainMapView,
+			LinearLayout ll_main_list_left, GraphicsLayer keyGraphicsLayer) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mapView = mainMapView;
+		this.ll_main_list_left = ll_main_list_left;
+		this.keyGraphicsLayer = keyGraphicsLayer;
+		popGestureManager = new PopGestureManager(context, mainMapView);
+		mapHelper = new MapHelper(mainMapView, mContext);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+
+		mList = new ArrayList<AddressBean>();
+		subLayers = new ArrayList<SubLayer>();
+		try {
+			List<SubLayer> resultLayers = MyApplication.mApp.subLayers;
+			if (resultLayers == null || resultLayers.size() == 0)
+				return;
+			for (int i = 0; i < resultLayers.size(); i++) {
+				if (resultLayers.get(i).getCanQuery().equalsIgnoreCase("YES")) {
+					subLayers.add(resultLayers.get(i));
+				}
+			}
+
+			currentSubLayer = subLayers.get(0);
+			presidents = new String[subLayers.size()];
+
+			for (int i = 0; i < subLayers.size(); i++) {
+				presidents[i] = subLayers.get(i).getName();
+			}
+			LogUtil.LoLoLog().d(subLayers.size());
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	class GetDataAsyncTask extends AsyncTask<SubLayer, Void, List<AddressBean>> {
+
+		ProgressDialog pdialog;
+
+		@Override
+		protected void onPostExecute(List<AddressBean> result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+			if (pdialog.isShowing()) {
+				pdialog.dismiss();
+			}
+			mList = result;
+			if (result != null && result.size() != 0) {
+
+				resultListAdapter = new ResultListAdapter(mContext, result);
+				mListView.setAdapter(resultListAdapter);
+			} else {
+				ToastUtil.makeToastInBottom("没有匹配的数据");
+			}
+
+			pb_buttom_more.setVisibility(View.GONE);// 将进度条可见
+			btn_buttom_more.setVisibility(View.VISIBLE);// 按钮不可见
+
+		}
+
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+			pdialog = new ProgressDialog(mContext);
+			pdialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+			pdialog.setMessage("正在查询...");
+			pdialog.show();
+		}
+
+		@Override
+		protected List<AddressBean> doInBackground(SubLayer... params) {
+			// TODO Auto-generated method stub
+			List<AddressBean> list = getData(params[0]);
+			if (list == null || list.size() == 0)
+				return null;
+			LogUtil.LoLoLog().d("查询到目标" + list.size() + "个");
+			if (list != null && list.size() > 0) {
+				keyGraphicsLayer.removeAll();
+
+				if (params[0].getGeoType().equals(GeoType.POINT.name())) {
+
+				} else if (params[0].getGeoType().equals(
+						GeoType.POLYLINE.name())) {
+					for (int i = 0; i < list.size(); i++) {
+						mapHelper.addPolylineToGraphicsLayer(list.get(i),
+								keyGraphicsLayer);
+					}
+					mapView.addLayer(keyGraphicsLayer);
+				} else if (params[0].getGeoType()
+						.equals(GeoType.POLYGON.name())) {
+					for (int i = 0; i < list.size(); i++) {
+						mapHelper.addPolygonToGraphicsLayer(list.get(i),
+								keyGraphicsLayer);
+					}
+					mapView.addLayer(keyGraphicsLayer);
+				}
+
+			}
+
+			return list;
+		}
+
+	}
+
+	/**
+	 * 组合sql语句
+	 * 
+	 * @param subLayer
+	 * @param cum
+	 * @return
+	 */
+	public String toSql(SubLayer subLayer, String cum) {
+		return "SELECT PK_UID ID,"
+				+ subLayer.getTitleField()
+				+ " NAME,"
+				+ subLayer.getSubTitleField()
+				+ " SUBNAME,ST_AsText(Geometry) GEOMETRY ,ST_AsText(ST_Centroid(Geometry)) CENTROID"
+				+ " FROM " + subLayer.getTableName() + " WHERE NAME LIKE '%"
+				+ cum.replace(" ", "%") + "%' OR SUBNAME LIKE '%"
+				+ cum.replace(" ", "%") + "%'";
+	}
+
+	/**
+	 * 根据查询条件查询
+	 * 
+	 * @param condition
+	 * @return
+	 */
+	List<AddressBean> getData(SubLayer s) {
+
+		List<AddressBean> list = null;
+		sdbHelper = new SDBHelper();
+		try {
+			if (!StringUtil.isEmpty(cum)) {
+				list = sdbHelper
+						.getResultBySql(toSql(s, cum), s.getTableName());
+			}
+			if (list == null || list.size() == 0)
+				return null;
+
+		} catch (jsqlite.Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+
+			LogUtil.LoLoLog().e(e.getMessage());
+			return null;
+		}
+		return list;
+
+	}
+
+	@SuppressLint("NewApi")
+	@Override
+	public void initView() {
+
+		initData();
+		// 实例化底部布局
+		moreView = LayoutInflater.from(mContext).inflate(R.layout.moredata,
+				null);
+
+		btn_buttom_more = (Button) moreView.findViewById(R.id.btn_buttom_more);
+		btn_buttom_more.setOnClickListener(this);
+		pb_buttom_more = (ProgressBar) moreView
+				.findViewById(R.id.pb_buttom_more);
+
+		main_list_left_content = (RelativeLayout) ll_main_list_left
+				.findViewById(R.id.main_list_left_content);
+
+		// pop.xml视图里面的控件
+		mListView = (ListView) main_list_left_content
+				.findViewById(R.id.lv_list);
+		mListView.setDivider(null);
+		// mListView.setFastScrollAlwaysVisible(false);
+		mListView.setFastScrollEnabled(false);
+		// mListView.addFooterView(moreView);
+
+		// 列表按钮
+		// btn_list_type = (Button) main_list_left_content
+		// .findViewById(R.id.btn_list_type);
+		// btn_list_type
+		// .setText(catalogs.get(0).getGroupLayers().get(0).getName());
+
+		mSpinner = (Spinner) main_list_left_content
+				.findViewById(R.id.spinner_list);
+		btn_list_search = (Button) main_list_left_content
+				.findViewById(R.id.btn_list_search);
+
+		// 关闭按钮
+		btn_list_close = (Button) main_list_left_content
+				.findViewById(R.id.btn_list_close);
+		btn_list_search.setOnClickListener(this);
+		edit_search = (EditText) main_list_left_content
+				.findViewById(R.id.edit_list);
+
+		mListView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+
+				Constants.HANDLER_MAIN
+						.sendEmptyMessage(Constants.WHAT_REFRESH_PLOYGON_CLICK);
+
+				// TODO Auto-generated method stub
+				mapHelper.showCalloutView(mList.get(arg2));
+			}
+		});
+
+		btn_list_close.setOnClickListener(this);
+
+		// edit_search.addTextChangedListener(new TextWatcher() {
+		//
+		// @Override
+		// public void onTextChanged(CharSequence s, int start, int before,
+		// int count) {
+		// // TODO Auto-generated method stub
+		// if (StringUtil.isEmpty(s.toString()))
+		// return;
+		// cum = s.toString();
+		// // 异步查询
+		// new GetDataAsyncTask().execute(currentSubLayer);
+		//
+		// }
+		//
+		// @Override
+		// public void beforeTextChanged(CharSequence s, int start, int count,
+		// int after) {
+		// // TODO Auto-generated method stub
+		//
+		// }
+		//
+		// @Override
+		// public void afterTextChanged(Editable s) {
+		// // TODO Auto-generated method stub
+		//
+		// }
+		// });
+
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
+				android.R.layout.simple_spinner_item, presidents);
+
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mSpinner.setAdapter(adapter);
+		mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> arg0, View arg1,
+					int arg2, long arg3) {
+
+				if (mapView.getCallout().isShowing())
+					mapView.getCallout().hide();
+				currentSubLayer = subLayers.get(arg2);
+				edit_search.setText("");
+				cum = "";
+				if (!StringUtil.isEmpty(cum)) {
+					new GetDataAsyncTask().execute(currentSubLayer);
+				}
+
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) {
+			}
+		});
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		switch (v.getId()) {
+		case R.id.btn_buttom_more:
+
+			pb_buttom_more.setVisibility(View.VISIBLE);// 将进度条可见
+			btn_buttom_more.setVisibility(View.GONE);// 按钮不可见
+			cum_index++;
+			new GetDataAsyncTask().execute(currentSubLayer);
+			break;
+		case R.id.btn_list_close:
+			ll_main_list_left.setVisibility(View.GONE);
+			Constants.HANDLER_MAIN
+					.sendEmptyMessage(Constants.WHAT_REFRESH_PLOYGON_CLICK);
+			break;
+		case R.id.btn_list_search:
+			cum = edit_search.getText().toString();
+			if (StringUtil.isEmpty(cum))
+				return;
+			new GetDataAsyncTask().execute(currentSubLayer);
+			break;
+
+		default:
+			break;
+		}
+	}
+}

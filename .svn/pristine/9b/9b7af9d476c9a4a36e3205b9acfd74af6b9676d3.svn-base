@@ -1,0 +1,40 @@
+package com.android.smartmobile.cz.bean;
+
+public class Image {
+	private String dpi = null;
+	private String width = null;
+	private String format = null;
+	private String compressionQuality = null;
+
+	public String getDpi() {
+		return dpi;
+	}
+
+	public void setDpi(String dpi) {
+		this.dpi = dpi;
+	}
+
+	public String getWidth() {
+		return width;
+	}
+
+	public void setWidth(String width) {
+		this.width = width;
+	}
+
+	public String getFormat() {
+		return format;
+	}
+
+	public void setFormat(String format) {
+		this.format = format;
+	}
+
+	public String getCompressionQuality() {
+		return compressionQuality;
+	}
+
+	public void setCompressionQuality(String compressionQuality) {
+		this.compressionQuality = compressionQuality;
+	}
+}

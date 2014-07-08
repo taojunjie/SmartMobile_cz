@@ -1,0 +1,565 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.activity;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.Toast;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.bean.AppConfigInfo;
+import com.android.smartmobile.cz.bean.Module;
+import com.android.smartmobile.cz.bean.Modules;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.listener.MapDefaultListener;
+import com.android.smartmobile.cz.map.OfflineCacheTiledServiceLayer;
+import com.android.smartmobile.cz.map.VectorPhotoLayer;
+import com.android.smartmobile.cz.model.BaseActivity;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.service.PullParseConfigMapService;
+import com.android.smartmobile.cz.service.PullParseConfigService;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.MapHelper;
+import com.android.smartmobile.cz.util.StringUtil;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.android.smartmobile.cz.view.BaseMapToolView;
+import com.android.smartmobile.cz.view.MainLeftListView;
+import com.android.smartmobile.cz.view.MainMapView;
+import com.android.smartmobile.cz.view.pop.PopListManager;
+import com.android.smartmobile.cz.view.pop.PopWebManager;
+import com.esri.android.map.Layer;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.esri.android.map.ags.ArcGISFeatureLayer;
+import com.esri.android.map.ags.ArcGISLayerInfo;
+import com.esri.android.map.ags.ArcGISLocalTiledLayer;
+import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
+import com.esri.android.map.event.OnStatusChangedListener;
+import com.esri.android.map.event.OnStatusChangedListener.STATUS;
+import com.esri.core.geometry.Envelope;
+import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.Polygon;
+import com.esri.core.geometry.Polyline;
+import com.esri.core.map.FeatureTemplate;
+import com.esri.core.map.FeatureType;
+import com.esri.core.map.Graphic;
+import com.esri.core.map.Legend;
+import com.esri.core.map.FeatureTemplate.DRAWING_TOOL;
+import com.esri.core.portal.WebMapLayer;
+import com.esri.core.renderer.Renderer;
+import com.esri.core.symbol.Symbol;
+import com.smartmobile.sdk.graphics.DrawTool;
+
+/**
+ * 
+ * @ClassName:
+ * @Description:
+ * @author
+ * @date 2013年7月31日 下午1:15:53
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ */
+
+public class MainActivity extends BaseActivity implements InitActivity {
+	private MapView mapView;
+	private MapHelper mapHelper;
+	private Context mContext;
+	private LinearLayout ll_main_menu_left, ll_right_toolmenu,
+			ll_main_menu_right, ll_main_list_left;
+	private PopWebManager popWebManager;
+	private PopListManager popListManager;
+	private MainLeftListView mainLeftListView;
+
+	public LinearLayout getLl_main_menu_right() {
+		return ll_main_menu_right;
+	}
+
+	public void setLl_main_menu_right(LinearLayout ll_main_menu_right) {
+		this.ll_main_menu_right = ll_main_menu_right;
+	}
+
+	@SuppressLint("HandlerLeak")
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.android.smartmobile.cz.model.BaseActivity#onCreate(android.os.Bundle)
+	 */
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.layout_main);
+		mContext = MainActivity.this;
+
+		initView();
+		initData();
+
+		popWebManager = new PopWebManager(mContext, mapView);
+		popListManager = new PopListManager(mContext, mapView);
+
+		// VectorPhotoLayer.getInstance().showPhotoMap(mapView);
+
+		//
+		// ArcGISFeatureLayer featureLayer = new ArcGISFeatureLayer(
+		// "http://sampleserver5.arcgisonline.com/ArcGIS/rest/services/LocalGovernment/Recreation/FeatureServer/0",
+		// ArcGISFeatureLayer.MODE.ONDEMAND);
+		//
+		final String dynamicMapURL = "http://49.115.210.66/ArcGIS/rest/services/TEST_YDHX/MapServer";
+		// final ArcGISTiledMapServiceLayer atm = new
+		// ArcGISTiledMapServiceLayer(
+		// dynamicMapURL);
+
+		// mapView.addLayer(atm); // 添加地图服务到map中
+
+		// 添加图层
+		MapHelper.AddMapLayer(mapView, "基础矢量");
+		String path = "file://" + Constants.TPKCachePath + "/用地红线.tpk";
+		LogUtil.LoLoLog().d(path);
+		// MapHelper.AddLocalMapLayer(mapView, path);
+		// MapHelper.AddDynamicMapServiceLayer(mapView, dynamicMapURL);
+		mapView.setOnStatusChangedListener(new OnStatusChangedListener() {
+			private static final long serialVersionUID = 1L;
+
+			public void onStatusChanged(Object arg0, STATUS arg1) {
+				if (arg0 == mapView && arg1 == STATUS.INITIALIZED) {// 地图加载成功
+					Toast.makeText(mContext, "地图加载成功", Toast.LENGTH_SHORT)
+							.show();
+					BaseMapToolView baseMapToolView = new BaseMapToolView(
+							mapView, mContext, ll_main_menu_right, null);
+					baseMapToolView.Init();
+
+					mainLeftListView = new MainLeftListView(mContext, mapView,
+							ll_main_list_left);
+					// mainLeftListView.initView();
+
+				}
+
+			}
+		});
+
+		mapView.setMapBackground(Color.WHITE, Color.TRANSPARENT, 0, 0);
+
+	}
+
+	// 取得图例,并将取得的图例放到List<Legend> 中返回
+	private List<Legend> getLends() {
+		List<Legend> ls = new ArrayList<Legend>();
+		Layer[] layers = mapView.getLayers();
+		for (Layer l : layers) {
+			if (l instanceof ArcGISFeatureLayer) {
+				ArcGISFeatureLayer af = (ArcGISFeatureLayer) l;
+				FeatureType[] types = af.getTypes();
+				Renderer<Graphic> renders = af.getRenderer();
+				for (FeatureType type : types) {
+					FeatureTemplate[] tems = type.getTemplates();
+					for (FeatureTemplate tem : tems) {
+						String name = tem.getName();
+						Graphic g = af.createFeatureWithTemplate(tem, null);
+						Symbol s = renders.getSymbol(g);
+						// 由于该FeatureLayer是个点图层，所以可以直接new Point(20, 20)，如下：
+						// Bitmap bitmap= af.createSymbolImage(s, new Point(20,
+						// 20), 40, 40, Color.WHITE);
+						// 如果不知道FeatureLayer是的类型，就要需要使用FeatureTemplate.DRAWING_TOOL，如下createSymbolBitmap方法：
+						Bitmap bitmap = createSymbolBitmap(af, tem);
+						Legend le = new Legend(bitmap, name);
+						ls.add(le);
+					}
+				}
+				if (ls.size() == 0) {// 该FeatureLayer不包含FeatureType
+					FeatureTemplate[] templates = af.getTemplates();
+					for (FeatureTemplate template : templates) {
+						Graphic gra = af.createFeatureWithTemplate(template,
+								null);
+						Symbol symbol = renders.getSymbol(gra);
+						// Bitmap bitm=af.createSymbolImage(symbol, new
+						// Point(20,20), 40, 40, Color.WHITE);
+						Bitmap bitm = createSymbolBitmap(af, template);
+						Legend le = new Legend(bitm, template.getName());
+						ls.add(le);
+					}
+				}
+			}
+
+		}
+		Log.i("GetLegendActivity", "共有图例" + ls.size());
+		return ls;
+	}
+
+	// 如果不知道FeatureLayer的类型，可以通过 FeatureTemplate.DRAWING_TOOL来判断
+	private Bitmap createSymbolBitmap(ArcGISFeatureLayer featurelayer,
+			FeatureTemplate featureTemplate) {
+		// determine feature type
+		FeatureTemplate.DRAWING_TOOL drawing_tool = featureTemplate
+				.getDrawingTool();
+		Geometry geometry = null;
+		if (drawing_tool == DRAWING_TOOL.POLYGON) {
+			Polygon polygon = new Polygon();
+			polygon.startPath(0, 0);
+			polygon.lineTo(0, 40);
+			polygon.lineTo(40, 40);
+			polygon.lineTo(40, 0);
+			polygon.lineTo(0, 0);
+			geometry = polygon;
+		} else if (drawing_tool == DRAWING_TOOL.LINE) {
+			Polyline polyline = new Polyline();
+			polyline.startPath(1, 1);
+			polyline.lineTo(39, 39);
+			geometry = polyline;
+		} else if (drawing_tool == DRAWING_TOOL.POINT)
+			geometry = new Point(20, 20);
+
+		Graphic g = featurelayer.createFeatureWithTemplate(featureTemplate,
+				null);
+		Renderer<Graphic> renderer = featurelayer.getRenderer();
+		Symbol symbol = renderer.getSymbol(g);
+		Bitmap bitmap = featurelayer.createSymbolImage(symbol, geometry, 40,
+				40, Color.WHITE);
+		return bitmap;
+	}
+
+	private Map<String, List<Legend>> getLegendWithNameList(
+			ArcGISDynamicMapServiceLayer dynamicLayer) {
+		Map<String, List<Legend>> map = null;
+
+		ArcGISLayerInfo[] arcGISLayerInfo = dynamicLayer.getLayers();
+		int length = arcGISLayerInfo.length;
+		if (length > 0) {
+			map = new HashMap<String, List<Legend>>();
+			for (int i = 0; i < length; i++) {
+				ArcGISLayerInfo arcGISLayerInfo2 = arcGISLayerInfo[i];
+				String name = arcGISLayerInfo2.getName();
+				List<Legend> legends = arcGISLayerInfo2.getLegend();
+				map.put(name, legends);
+			}
+		}
+
+		return map;
+	}
+
+	@SuppressWarnings("null")
+	private List<Legend> getLegendList(ArcGISTiledMapServiceLayer dynamicLayer) {
+
+		List<Legend> list = null;
+		ArcGISLayerInfo[] arcGISLayerInfo = dynamicLayer.getLayers();
+		int length = arcGISLayerInfo.length;
+		if (length > 0) {
+
+			for (int i = 0; i < length; i++) {
+				ArcGISLayerInfo arcGISLayerInfo2 = arcGISLayerInfo[i];
+				String name = arcGISLayerInfo2.getName();
+				List<Legend> legends = arcGISLayerInfo2.getLegend();
+				if (legends != null && legends.size() > 0) {
+					list.addAll(legends);
+				}
+
+			}
+		}
+
+		return list;
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (mapView.getCallout().isShowing())
+			mapView.getCallout().hide();
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+
+		Modules modules;
+		try {
+			// 解析模板数据
+
+			PullParseConfigService.getInstance();
+			modules = PullParseConfigService.getModules();
+			// 初始化左侧导航菜单
+			initLeftMenuView(modules.getList(), -1);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// 获取屏幕宽度
+		WindowManager wm = (WindowManager) mContext
+				.getSystemService(Context.WINDOW_SERVICE);
+
+		Constants.WINDOW_WIDTH = wm.getDefaultDisplay().getWidth();
+		Constants.WINDOW_HIGHT = wm.getDefaultDisplay().getHeight();
+
+		ViewTreeObserver vto1 = ll_main_menu_left.getViewTreeObserver();
+		vto1.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				ll_main_menu_left.getViewTreeObserver()
+						.removeGlobalOnLayoutListener(this);
+				Constants.MAIN_LEFT_MENU_WIDTH = ll_main_menu_left.getWidth();
+				LogUtil.LoLoLog().d(Constants.MAIN_LEFT_MENU_WIDTH);
+
+			}
+		});
+
+		ViewTreeObserver vto2 = ll_main_menu_right.getViewTreeObserver();
+		vto2.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				ll_main_menu_left.getViewTreeObserver()
+						.removeGlobalOnLayoutListener(this);
+				Constants.MAIN_RIGHT_MENU_WIDTH = ll_main_menu_right.getWidth();
+				LogUtil.LoLoLog().d(Constants.MAIN_RIGHT_MENU_WIDTH);
+			}
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initView()
+	 */
+	@Override
+	public void initView() {
+		// TODO Auto-generated method stub
+		// mainMapView = (MainMapView) this.findViewById(R.id.main_mapView);
+		mapView = (MapView) this.findViewById(R.id.main_mapview);
+
+		ll_main_menu_left = (LinearLayout) this
+				.findViewById(R.id.ll_main_menu_left);
+
+		Constants.ll_left_menu = ll_main_menu_left;
+
+		ll_main_menu_right = (LinearLayout) this
+				.findViewById(R.id.ll_main_menu_right);
+
+		ll_right_toolmenu = (LinearLayout) this
+				.findViewById(R.id.ll_right_toolmenu);
+
+		ll_main_list_left = (LinearLayout) this
+				.findViewById(R.id.ll_main_list_left);
+		// 设置地图监听
+		mapView.setOnTouchListener(new MapDefaultListener(mContext, mapView,
+				ll_main_menu_right));
+
+	}
+
+	/**
+	 * 左侧导航初始化
+	 * 
+	 * @param modules
+	 */
+	private void initLeftMenuView(final List<Module> modules, int press) {
+		// TODO Auto-generated method stub
+		ll_main_menu_left.removeAllViews();
+		if (modules == null || modules.size() == 0)
+			return;
+		for (int i = 0; i < modules.size(); i++) {
+			final int index = i;
+			final Button button_nomal = new Button(mContext);
+			button_nomal.setBackgroundResource(getRidByName(modules.get(index)
+					.getImg_nomal()));
+
+			final Button button_press = new Button(mContext);
+			button_press.setBackgroundResource(getRidByName(modules.get(index)
+					.getImg_press()));
+
+			if (press == index) {
+				button_press.setVisibility(View.VISIBLE);
+				button_nomal.setVisibility(View.GONE);
+				// button_press.setText(modules.get(i).getTitle());
+				button_press.setLayoutParams(new LinearLayout.LayoutParams(
+						LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+				button_press.setGravity(Gravity.CENTER);
+				button_press.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						initLeftMenuView(modules, index);
+						ToastUtil.makeToastInBottom(index + "");
+						// 这里是位置显示方式,在按钮的左下角
+						showPopWindow(button_nomal, index);
+
+					}
+				});
+			} else {
+				button_nomal.setVisibility(View.VISIBLE);
+				button_press.setVisibility(View.GONE);
+				// button_nomal.setText(modules.get(i).getTitle());
+				button_nomal.setLayoutParams(new LinearLayout.LayoutParams(
+						LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+				button_nomal.setGravity(Gravity.CENTER);
+				button_nomal.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						initLeftMenuView(modules, index);
+						ToastUtil.makeToastInBottom(index + "");
+						showPopWindow(button_nomal, index);
+					}
+				});
+			}
+
+			ll_main_menu_left.addView(button_nomal);
+			ll_main_menu_left.addView(button_press);
+
+		}
+
+	}
+
+	/**
+	 * 显示pop
+	 * 
+	 * @param view
+	 * @param index
+	 */
+	void showPopWindow(View view, int index) {
+
+		switch (index) {
+		case 0:
+			if (null != popWebManager.getPopupWindow()
+					&& popWebManager.getPopupWindow().isShowing()) {
+				popWebManager.getPopupWindow().dismiss();
+				popWebManager.setPopupWindow(null);
+			}
+
+			// if (null != popListManager.getPopupWindow()
+			// && popListManager.getPopupWindow().isShowing()) {
+			// popListManager.getPopupWindow().dismiss();
+			// popListManager.setPopupWindow(null);
+			// return;
+			// } else {
+			// popListManager.initView();
+			// int[] location = new int[2];
+			// view.getLocationOnScreen(location);
+			// popListManager.getPopupWindow().showAtLocation(view,
+			// Gravity.NO_GRAVITY,
+			// location[0] + Constants.MAIN_LEFT_MENU_WIDTH,
+			// location[1]);
+			// }
+			ll_main_list_left
+					.setVisibility(ll_main_list_left.getVisibility() != View.VISIBLE ? View.VISIBLE
+							: View.GONE);
+
+			if (ll_main_list_left.getVisibility() == View.VISIBLE) {
+				mainLeftListView.initView();
+			}
+			break;
+
+		case 1:
+			if (ll_main_list_left.getVisibility() == View.VISIBLE) {
+				ll_main_list_left.setVisibility(View.GONE);
+			}
+
+			// if (null != popListManager.getPopupWindow()
+			// && popListManager.getPopupWindow().isShowing()) {
+			// popListManager.getPopupWindow().dismiss();
+			// popListManager.setPopupWindow(null);
+			// }
+			if (null != popWebManager.getPopupWindow()
+					&& popWebManager.getPopupWindow().isShowing()) {
+				popWebManager.getPopupWindow().dismiss();
+				popWebManager.setPopupWindow(null);
+				return;
+			} else {
+				popWebManager.initView();
+				int[] location = new int[2];
+				view.getLocationOnScreen(location);
+				popWebManager.getPopupWindow().showAtLocation(view,
+						Gravity.NO_GRAVITY,
+						location[0] + Constants.MAIN_LEFT_MENU_WIDTH,
+						location[1]);
+
+			}
+			break;
+
+		case 2:
+
+			break;
+
+		case 3:
+
+			break;
+
+		default:
+			break;
+		}
+
+	}
+
+	protected int getRidByName(String name) {
+		Class drawable = R.drawable.class;
+		Field field = null;
+		try {
+			field = drawable.getField(name);
+			int r_id = field.getInt(field.getName());
+			return r_id;
+		} catch (Exception e) {
+			Log.e("ERROR", "PICTURE NOT　FOUND！");
+		}
+		return 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+		List<PopupWindow> list = MyApplication.mApp.popupWindows;
+		if (list.size() > 0) {
+			for (int i = 0; i < list.size(); i++) {
+				PopupWindow popupWindow = list.get(i);
+				if (popupWindow != null && popupWindow.isShowing()) {
+					popupWindow.dismiss();
+					popupWindow = null;
+				}
+			}
+		}
+	}
+}

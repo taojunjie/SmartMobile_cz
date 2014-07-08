@@ -1,0 +1,42 @@
+package com.android.smartmobile.cz.bean;
+
+public class ExtentBean {
+	private String xmin = null;
+	private String ymin = null;
+	private String xmax = null;
+	private String ymax = null;
+	private String spatialReference = null;
+	public String getXmin() {
+		return xmin;
+	}
+	public void setXmin(String xmin) {
+		this.xmin = xmin;
+	}
+	public String getYmin() {
+		return ymin;
+	}
+	public void setYmin(String ymin) {
+		this.ymin = ymin;
+	}
+	public String getXmax() {
+		return xmax;
+	}
+	public void setXmax(String xmax) {
+		this.xmax = xmax;
+	}
+	public String getYmax() {
+		return ymax;
+	}
+	public void setYmax(String ymax) {
+		this.ymax = ymax;
+	}
+	public String getSpatialReference() {
+		return spatialReference;
+	}
+	public void setSpatialReference(String spatialReference) {
+		this.spatialReference = spatialReference;
+	}
+	
+	
+
+}

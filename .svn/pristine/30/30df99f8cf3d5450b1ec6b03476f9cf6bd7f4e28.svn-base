@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#f2f2f2"
+    android:orientation="vertical"
+    android:padding="5dp" >
+
+    <LinearLayout
+        android:id="@+id/ll_child_tool_top"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="5dp" >
+
+        <Button
+            android:id="@+id/btn_child_isvisible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20dp"
+            android:background="@drawable/btn_child_isvisible"
+            android:focusable="false"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btn_child_isvisible_p"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20dp"
+            android:background="@drawable/btn_child_isvisible_p"
+            android:focusable="false"
+            android:gravity="center"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/txt_child_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20dp"
+            android:layout_weight="1"
+            android:gravity="left|center_vertical"
+            android:text="No data"
+            android:textColor="#999999"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/btn_child_goto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_child_goto"
+            android:focusable="false"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_child_tool"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll_child_tool_top"
+        android:orientation="horizontal"
+        android:padding="5dp"
+        android:visibility="gone"
+        >
+
+        <TextView
+            android:id="@+id/txt_child_seekbar"
+            android:layout_width="25dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:gravity="left|center_vertical"
+            android:text=""
+            android:textColor="#FF7F00"
+            android:textSize="10sp" />
+
+        <SeekBar
+            android:id="@+id/seekbar_child"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:focusable="false"
+            android:gravity="center_vertical" />
+
+        <Button
+            android:id="@+id/btn_child_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:focusable="false"
+            android:gravity="center_vertical"
+            android:text="定位"
+            android:textColor="#999999" />
+
+        <Button
+            android:id="@+id/btn_child_legend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:focusable="false"
+            android:gravity="center_vertical"
+            android:text="图例"
+            android:textColor="#999999"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</RelativeLayout>

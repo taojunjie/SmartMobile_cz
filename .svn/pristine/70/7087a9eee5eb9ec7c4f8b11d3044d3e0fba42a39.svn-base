@@ -1,0 +1,32 @@
+package com.android.smartmobile.cz.map;
+
+import com.esri.android.map.GraphicsLayer;
+
+public class LooGraphicsLayer {
+	private GraphicsLayer graphicsLayer = null;
+	private String layerName = "";
+
+	public LooGraphicsLayer(String layerName) {
+		// TODO Auto-generated constructor stub
+		graphicsLayer = new GraphicsLayer();
+		this.layerName = layerName;
+		graphicsLayer.setName(layerName);
+	}
+
+	public String getLayerName() {
+		return layerName;
+	}
+
+	public void setLayerName(String layerName) {
+		this.layerName = layerName;
+	}
+
+	public GraphicsLayer getGraphicsLayer() {
+		return graphicsLayer;
+	}
+
+	public void removeAll() {
+		graphicsLayer.removeAll();
+	}
+
+}

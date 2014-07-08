@@ -1,0 +1,21 @@
+package com.android.smartmobile.cz.map;
+
+import android.content.Context;
+
+import com.esri.android.map.MapView;
+
+public class LooMapControl {
+	private MapView mapView;
+	private Context mContext;
+
+	public LooMapControl(MapView mapView, Context context) {
+		// TODO Auto-generated constructor stub
+		this.mapView = mapView;
+		this.mContext = context;
+	}
+
+	public MapView getMapView() {
+		return mapView;
+	}
+
+}

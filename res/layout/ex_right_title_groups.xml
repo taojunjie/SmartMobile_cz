@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="vertical" 
+    >
+
+    <TextView
+        android:id="@+id/txt_right_title_group_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:gravity="center_vertical"
+        android:text="No data"
+        android:textColor="#C67171"
+        android:textSize="22sp"
+        android:textStyle="bold" 
+        android:padding="5dp">
+    </TextView>
+
+</RelativeLayout>

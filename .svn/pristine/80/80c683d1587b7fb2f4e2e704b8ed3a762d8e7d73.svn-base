@@ -1,0 +1,408 @@
+package com.android.smartmobile.cz.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.codehaus.jackson.map.ObjectReader;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import android.content.Context;
+import android.util.Xml;
+
+import com.android.smartmobile.cz.bean.AppConfigInfo;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.bean.Extent;
+import com.android.smartmobile.cz.bean.GroupLayer;
+import com.android.smartmobile.cz.bean.Image;
+import com.android.smartmobile.cz.bean.LODInfo;
+import com.android.smartmobile.cz.bean.Layer;
+import com.android.smartmobile.cz.bean.Level;
+import com.android.smartmobile.cz.bean.MapItem;
+import com.android.smartmobile.cz.bean.Module;
+import com.android.smartmobile.cz.bean.Modules;
+import com.android.smartmobile.cz.bean.OriginPoint;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.util.ToastUtil;
+
+/**
+ * 
+ * @ClassName:PullParseService
+ * @Description: xml pull解析
+ * @author
+ * @date 2013年7月31日 下午1:15:53
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ */
+public class PullParseConfigMapService {
+
+	public static PullParseConfigMapService parseServiceSingleton = null;
+
+	public static PullParseConfigMapService getInstance() {
+		if (parseServiceSingleton == null) {
+			synchronized (PullParseConfigMapService.class) {
+				if (parseServiceSingleton == null) {
+					parseServiceSingleton = new PullParseConfigMapService();
+				}
+			}
+		}
+		return parseServiceSingleton;
+	}
+
+	/**
+	 * 
+	 */
+	public PullParseConfigMapService() {
+		// TODO Auto-generated constructor stub
+
+	}
+
+	protected static InputStream getInputStreamFromAssets() {
+		InputStream inputStream = null;
+		try {
+			inputStream = MyApplication.mApp.mContext.getAssets().open(
+					Constants.CONFIG_MAP_PATH);
+			if (inputStream != null) {
+				return inputStream;
+			} else {
+				ToastUtil.makeToastInBottom("配置文件不存在");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return inputStream;
+	}
+
+	/**
+	 * 获得所有图层
+	 * 
+	 * @param inputStream
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<Catalog> getCatalogs() throws Exception {
+		List<Catalog> lCatalogs = null;
+		List<GroupLayer> lGroupLayers = null;
+		Catalog catalog = null;
+		GroupLayer groupLayer = null;
+		XmlPullParser parser = Xml.newPullParser();
+		parser.setInput(getInputStreamFromAssets(), "UTF-8");
+
+		int event = parser.getEventType();// 产生第一个事件
+
+		while (event != XmlPullParser.END_DOCUMENT) {
+			switch (event) {
+			case XmlPullParser.START_DOCUMENT:// 判断当前事件是否是文档开始事件
+				lCatalogs = new ArrayList<Catalog>();
+				break;
+			case XmlPullParser.START_TAG:// 判断当前事件是否是标签元素开始事件
+				if ("catalog".equals(parser.getName())) {// 判断开始标签元素是否是book
+					catalog = new Catalog();
+					String name = parser.getAttributeValue(0);
+					if (!name.equalsIgnoreCase("")) {
+						catalog.setName(name);// 得到modules标签的属性值
+					}
+					lGroupLayers = new ArrayList<GroupLayer>();// 初始化lModules集合
+				}
+
+				if (catalog != null) {
+					if ("groupLayer".equals(parser.getName())) {// 判断开始标签元素是否是name
+						groupLayer = new GroupLayer();
+						String name = parser.getAttributeValue(0);
+						String aliasName = parser.getAttributeValue(1);
+						String type = parser.getAttributeValue(2);
+						String visibleLayers = parser.getAttributeValue(3);
+
+						String url = parser.nextText();
+
+						groupLayer.setName(name);
+						groupLayer.setAliasName(aliasName);
+						groupLayer.setType(type);
+						groupLayer.setVisibleLayers(visibleLayers);
+						groupLayer.setUrl(url);
+						lGroupLayers.add(groupLayer);//
+						groupLayer = null;
+					}
+
+				}
+				break;
+			case XmlPullParser.END_TAG:// 判断当前事件是否是标签元素结束事件
+
+				if ("catalog".equals(parser.getName())) {// 判断结束标签元素是否是book
+					catalog.setGroupLayers(lGroupLayers);
+					lCatalogs.add(catalog);// 将book添加到books集合
+					catalog = null;
+				}
+				break;
+			}
+			event = parser.next();// 进入下一个元素并触发相应事件
+		}
+
+		return lCatalogs;
+	}
+
+	
+	public static List<MapItem> getMapsgement()
+			throws XmlPullParserException, IOException {
+		MapItem mapItem=null;
+		List<MapItem> lItems = null;
+
+		XmlPullParser parser = Xml.newPullParser();
+		parser.setInput(getInputStreamFromAssets(), "UTF-8");
+
+		int event = parser.getEventType();// 产生第一个事件
+
+		while (event != XmlPullParser.END_DOCUMENT) {
+			switch (event) {
+			case XmlPullParser.START_DOCUMENT:// 判断当前事件是否是文档开始事件
+				mapItem=new MapItem();
+				break;
+			case XmlPullParser.START_TAG:// 判断当前事件是否是标签元素开始事件
+				
+				break;
+			case XmlPullParser.END_TAG:// 判断当前事件是否是标签元素结束事件
+
+				break;
+			}
+			event = parser.next();// 进入下一个元素并触发相应事件
+		}
+
+		return lItems;
+	}
+	
+	
+	
+	public static AppConfigInfo getAppConfigInfo()
+			throws XmlPullParserException, IOException {
+		AppConfigInfo appConfigInfo = null;
+
+		XmlPullParser parser = Xml.newPullParser();
+		parser.setInput(getInputStreamFromAssets(), "UTF-8");
+
+		int event = parser.getEventType();// 产生第一个事件
+
+		while (event != XmlPullParser.END_DOCUMENT) {
+			switch (event) {
+			case XmlPullParser.START_DOCUMENT:// 判断当前事件是否是文档开始事件
+				appConfigInfo = new AppConfigInfo();
+				break;
+			case XmlPullParser.START_TAG:// 判断当前事件是否是标签元素开始事件
+				if ("ApplicationTitle".equals(parser.getName())) {//
+					appConfigInfo.setApplicationTitle(parser.nextText());
+				}
+				if ("maplogo".equals(parser.getName())) {//
+					appConfigInfo.setMaplogo(parser.nextText());
+				}
+				if ("InitExtent".equals(parser.getName())) {//
+					String xmin = parser.getAttributeValue(0);
+					String ymin = parser.getAttributeValue(1);
+					String xmax = parser.getAttributeValue(2);
+					String ymax = parser.getAttributeValue(3);
+					String spatialReference = parser.getAttributeValue(4);
+
+					Extent extent = new Extent();
+					extent.setXmin(xmin);
+					extent.setYmin(ymin);
+					extent.setXmax(xmax);
+					extent.setYmax(ymax);
+					extent.setSpatialReference(spatialReference);
+
+					appConfigInfo.setExtent(extent);
+				}
+
+				if ("resolution".equals(parser.getName())) {//
+					appConfigInfo.setResolution(parser.nextText());
+				}
+
+				if ("scale".equals(parser.getName())) {//
+					appConfigInfo.setScale(parser.nextText());
+				}
+
+				if ("serviceUrl".equals(parser.getName())) {//
+					appConfigInfo.setServiceUrl(parser.nextText());
+				}
+				break;
+			case XmlPullParser.END_TAG:// 判断当前事件是否是标签元素结束事件
+
+				break;
+			}
+			event = parser.next();// 进入下一个元素并触发相应事件
+		}
+
+		return appConfigInfo;
+	}
+
+	public static Layer getLayerByName(String name)
+			throws XmlPullParserException, IOException {
+		Map<String, Layer> map = getLayers();
+		Set<String> set = map.keySet();
+		for (String s : set) {
+			if (s.equalsIgnoreCase(name)) {
+				return map.get(s);
+			}
+		}
+		return null;
+	}
+
+	public static Map<String, Layer> getLayers() throws XmlPullParserException,
+			IOException {
+		Layer layer = null;
+		Map<String, Layer> map = null;
+		String name = null;
+		XmlPullParser parser = Xml.newPullParser();
+		parser.setInput(getInputStreamFromAssets(), "UTF-8");
+
+		int event = parser.getEventType();// 产生第一个事件
+
+		while (event != XmlPullParser.END_DOCUMENT) {
+			switch (event) {
+			case XmlPullParser.START_DOCUMENT:// 判断当前事件是否是文档开始事件
+				map = new HashMap<String, Layer>();
+				break;
+			case XmlPullParser.START_TAG:// 判断当前事件是否是标签元素开始事件
+
+				if ("layerParamDefine".equals(parser.getName())) {//
+
+					layer = new Layer();
+
+				}
+
+				if (layer != null) {
+					if ("layer".equals(parser.getName())) {//
+
+						name = parser.getAttributeValue(0);
+						layer.setName(name);
+					}
+
+					if ("downloadable".equals(parser.getName())) {//
+						layer.setDownloadable(parser.nextText());
+					}
+
+					if ("SSID".equals(parser.getName())) {//
+						layer.setSSID(parser.nextText());
+					}
+
+					if ("unit".equals(parser.getName())) {//
+						layer.setUnit(parser.nextText());
+					}
+
+					if ("InitialExtent".equals(parser.getName())) {//
+						String xmin = parser.getAttributeValue(0);
+						String ymin = parser.getAttributeValue(1);
+						String xmax = parser.getAttributeValue(2);
+						String ymax = parser.getAttributeValue(3);
+						String spatialReference = parser.getAttributeValue(4);
+
+						Extent initialExtent = new Extent();
+						initialExtent.setXmin(xmin);
+						initialExtent.setYmin(ymin);
+						initialExtent.setXmax(xmax);
+						initialExtent.setYmax(ymax);
+						initialExtent.setSpatialReference(spatialReference);
+
+						layer.setInitialExtent(initialExtent);
+					}
+
+					if ("FullExtent".equals(parser.getName())) {//
+						String xmin = parser.getAttributeValue(0);
+						String ymin = parser.getAttributeValue(1);
+						String xmax = parser.getAttributeValue(2);
+						String ymax = parser.getAttributeValue(3);
+						String spatialReference = parser.getAttributeValue(4);
+
+						Extent fullExtent = new Extent();
+						fullExtent.setXmin(xmin);
+						fullExtent.setYmin(ymin);
+						fullExtent.setXmax(xmax);
+						fullExtent.setYmax(ymax);
+						fullExtent.setSpatialReference(spatialReference);
+
+						layer.setFullExtent(fullExtent);
+					}
+
+					if ("Image".equals(parser.getName())) {//
+						Image image = new Image();
+						String dpi = parser.getAttributeValue(0);
+						String width = parser.getAttributeValue(1);
+						String format = parser.getAttributeValue(2);
+						String compressionQuality = parser.getAttributeValue(3);
+
+						image.setDpi(dpi);
+						image.setWidth(width);
+						image.setFormat(format);
+						image.setCompressionQuality(compressionQuality);
+						layer.setImage(image);
+					}
+
+					if ("OriginPoint".equals(parser.getName())) {//
+						OriginPoint originPoint = new OriginPoint();
+						String x = parser.getAttributeValue(0);
+						String y = parser.getAttributeValue(1);
+						String spatialReference = parser.getAttributeValue(2);
+						originPoint.setX(x);
+						originPoint.setY(y);
+						originPoint.setSpatialReference(spatialReference);
+						layer.setOriginPoint(originPoint);
+					}
+
+					if ("LODInfo".equals(parser.getName())) {//
+						LODInfo lodInfo = new LODInfo();
+
+						String levels = parser.getAttributeValue(0);
+						String initialScale = parser.getAttributeValue(1);
+						String initialResolution = parser.getAttributeValue(2);
+						String miniLevel = parser.getAttributeValue(3);
+						lodInfo.setLevels(levels);
+						lodInfo.setInitialScale(initialScale);
+						lodInfo.setInitialResolution(initialResolution);
+						lodInfo.setMiniLevel(miniLevel);
+						layer.setLodInfo(lodInfo);
+					}
+					if ("level".equals(parser.getName())) {//
+						Level level = new Level();
+						String minlevel = parser.getAttributeValue(0);
+						String maxlevel = parser.getAttributeValue(1);
+						String url = parser.nextText();
+						level.setMinlevel(minlevel);
+						level.setMaxlevel(maxlevel);
+						level.setUrl(url);
+						layer.setLevel(level);
+					}
+					if ("tpk".equals(parser.getName())) {//
+						layer.setTpk(parser.nextText());
+					}
+				}
+
+				break;
+			case XmlPullParser.END_TAG:// 判断当前事件是否是标签元素结束事件
+				if (layer != null) {
+					if ("layer".equals(parser.getName())) {//
+						map.put(name, layer);
+						layer = new Layer();
+					}
+
+					if ("layerParamDefine".equals(parser.getName())) {//
+
+						layer = null;
+					}
+				}
+
+				break;
+			}
+			event = parser.next();// 进入下一个元素并触发相应事件
+		}
+		return map;
+
+	}
+}

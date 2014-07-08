@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/ib_right_photo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_btn_map_manager" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical" >
+
+        <ImageView
+            android:id="@+id/img_right_menu_tool"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selector_right_menu_tool" />
+
+        <LinearLayout
+            android:id="@+id/ll_right_tools"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/img_right_menu_tool"
+            android:background="@drawable/ploting_bg"
+            android:orientation="vertical" >
+
+            <ImageView
+                android:id="@+id/img_right_menu_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/btn_right_menu_search"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/img_right_menu_measure"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/btn_right_menu_measure" />
+
+            <ImageView
+                android:id="@+id/img_right_menu_plotting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/btn_right_menu_plotting" />
+
+            <ImageView
+                android:id="@+id/img_right_menu_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/btn_right_menu_location" />
+
+            <ImageView
+                android:id="@+id/img_right_menu_legend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/btn_right_menu_legend" />
+
+            <ImageView
+                android:id="@+id/img_right_menu_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/btn_right_menu_photo" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_right_menu_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="20dp"
+            android:orientation="vertical" >
+
+            <ImageView
+                android:id="@+id/img_right_menu_offline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/selector_right_menu_offline"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/img_right_menu_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/selector_right_menu_clear" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</LinearLayout>

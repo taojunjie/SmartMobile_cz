@@ -1,0 +1,222 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.util;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.map.OfflineCacheTiledServiceLayer;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.service.PullParseConfigMapService;
+import com.android.smartmobile.cz.view.MainMapView;
+import com.esri.android.map.GroupLayer;
+import com.esri.android.map.Layer;
+import com.esri.android.map.MapView;
+import com.esri.android.map.TiledLayer;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.esri.android.map.ags.ArcGISFeatureLayer;
+import com.esri.android.map.ags.ArcGISLocalTiledLayer;
+import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
+
+/**
+ * 
+ * @ClassName: MapHelper
+ * @Description: 地图辅助类
+ * @author Administrator
+ * @date 2013年8月5日 上午11:24:53
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class MapHelper {
+	private MapView mainMapView;
+
+	/**
+	 * 
+	 */
+	private MapHelper() {
+		// TODO Auto-generated constructor stub
+
+	}
+
+	// 离线切片
+	private List<ArcGISLocalTiledLayer> mapLayer_local = null; // 切片图层
+	// 在线切片
+	private List<ArcGISTiledMapServiceLayer> mapLayer_online = null; // 切片图层
+
+	/**
+	 * 返回当前显示切片的层数
+	 * 
+	 * @return
+	 */
+	public int getCurrentLevel() {
+		if (mapLayer_local != null && mapLayer_local.size() > 0) {
+			return mapLayer_local.get(0).getCurrentLevel();
+		}
+		if (mapLayer_online != null && mapLayer_online.size() > 0) {
+			return mapLayer_online.get(0).getCurrentLevel();
+		}
+		return 0;
+	}
+
+	/**
+	 * 加载切片数据
+	 * 
+	 * @param tiledLayerPath
+	 *            "file:///mnt/sdcard/..."
+	 * @throws Exception
+	 */
+	public void LoadMap(String tiledLayerPath) throws Exception {
+		ArrayList<String> path = new ArrayList<String>();
+		path.add(tiledLayerPath);
+		LoadMapList(path);
+	}
+
+	/**
+	 * 加载切片数据
+	 */
+	public void LoadMapList(ArrayList<String> TiledLayerPaths) throws Exception {
+
+		// load maplayer
+		if (TiledLayerPaths != null && TiledLayerPaths.size() > 0) {
+			// if (!cachePath.startsWith("file:///mnt")) cachePath =
+			// "file:///mnt" + cachePath;
+			try {
+				// todo:add layers
+				if (mapLayer_local == null)
+					mapLayer_local = new ArrayList<ArcGISLocalTiledLayer>();
+				if (mapLayer_online == null)
+					mapLayer_online = new ArrayList<ArcGISTiledMapServiceLayer>();
+				for (int i = 0; i < TiledLayerPaths.size(); i++) {
+					String cachePath = TiledLayerPaths.get(i);
+					if (!cachePath.equalsIgnoreCase("")) {
+						String[] tmp = cachePath.split(";");
+						String layerName = "", type = "", path = "";
+						for (int j = 0; j < tmp.length; j++) {
+							String[] tmp1 = tmp[j].split("=");
+							if (tmp1[0].trim().equalsIgnoreCase("layername")) {
+								layerName = tmp1[1].trim();
+							} else if (tmp1[0].trim().equalsIgnoreCase("type")) {
+								type = tmp1[1].trim();
+							} else if (tmp1[0].trim().equalsIgnoreCase("path")) {
+								path = tmp1[1].trim();
+							}
+						}
+						AddTiledLayer(layerName, type, path);
+					}
+				}
+				// if (zoomLevels != null && zoomLevels.length > 0) {
+				// _map.setScale(zoomLevels[0]);
+				// }
+			} catch (Exception ex) {
+				LogUtil.LoLoLog().e(ex.getMessage());
+				throw new Exception(ex.getMessage());
+			}
+		}
+
+	}
+
+	/**
+	 * 添加切片数据
+	 * 
+	 * @param layerName
+	 *            自定义切片图层名称
+	 * @param netType
+	 *            数据在线/离线 状态
+	 * @param filesPath
+	 *            切片路径
+	 */
+	public void AddTiledLayer(String layerName, String netType, String filesPath)
+			throws Exception {
+		if (netType.equalsIgnoreCase("offline") || netType.equals("")) {
+			ArcGISLocalTiledLayer layer = new ArcGISLocalTiledLayer(filesPath);
+			layer.setName(layerName);
+			mapLayer_local.add(layer);
+			mainMapView.addLayer(layer);
+		} else if (netType.equalsIgnoreCase("online")) {
+			ArcGISTiledMapServiceLayer layer = new ArcGISTiledMapServiceLayer(
+					filesPath);
+			layer.setName(layerName);
+			mapLayer_online.add(layer);
+			mainMapView.addLayer(layer);
+		} else {
+			throw new Exception("图层来源错误，应传入标记：offline/online");
+		}
+	}
+
+	public static void AddMapLayer(MapView mapView, String layerName) {
+
+		try {
+			com.android.smartmobile.cz.bean.Layer layer1 = PullParseConfigMapService
+					.getLayerByName(layerName);
+
+			layer1.setResolution(MyApplication.mApp.appConfigInfo
+					.getResolution());
+			layer1.setScale(MyApplication.mApp.appConfigInfo.getScale());
+			com.esri.android.map.GroupLayer groupLayer = new com.esri.android.map.GroupLayer();
+			groupLayer.setName(layerName);
+			groupLayer.addLayer(new OfflineCacheTiledServiceLayer(
+					Constants.MapCachePath, layer1));
+			mapView.addLayer(groupLayer, 0); // 添加地图服务到map中
+
+		} catch (XmlPullParserException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+	}
+
+	public static void AddLocalMapLayer(MapView mapView, String layerName) {
+
+		// 加载离线缓存切片
+		String path = "file://" + Constants.TPKCachePath + "/" + layerName
+				+ ".tpk";
+		ArcGISLocalTiledLayer layer1 = new ArcGISLocalTiledLayer(path);
+		layer1.setName(layerName);
+		mapView.addLayer(layer1); // 添加地图服务到map中
+
+	}
+
+	public static void AddFeatureLayer(MapView mapView, String layerPath,
+			String layerName) {
+
+		ArcGISFeatureLayer featureLayer = new ArcGISFeatureLayer(layerPath,
+				ArcGISFeatureLayer.MODE.ONDEMAND);
+		featureLayer.setName(layerName);
+		mapView.addLayer(featureLayer); // 添加地图服务到map中
+	}
+
+	public static void AddDynamicMapServiceLayer(MapView mapView,
+			String layerPath, String layerName) {
+
+		ArcGISDynamicMapServiceLayer dynamicMapServiceLayer = new ArcGISDynamicMapServiceLayer(
+				layerPath);
+		dynamicMapServiceLayer.setName(layerName);
+		mapView.addLayer(dynamicMapServiceLayer); // 添加地图服务到map中
+	}
+
+	public static Layer getLayerByName(MapView mapView, String layerName) {
+		Layer[] layers = mapView.getLayers();
+		for (Layer l : layers) {
+			if (layerName.equals(l.getName())) {
+				return l;
+			}
+			
+			if (l instanceof ArcGISLocalTiledLayer) {
+				if (layerName.equals(l.getName())) {
+					return l;
+				}
+			}
+		}
+		return null;
+	}
+
+}

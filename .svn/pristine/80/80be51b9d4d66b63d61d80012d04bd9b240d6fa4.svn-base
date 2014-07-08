@@ -1,0 +1,197 @@
+package com.android.smartmobile.cz.db;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import com.android.smartmobile.cz.bean.AddressBean;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.StringUtil;
+
+import jsqlite.Callback;
+
+import jsqlite.TableResult;
+
+public class SDBHelper {
+
+	public SDBHelper() {
+		// TODO Auto-generated constructor stub
+		mDatabaseHelper = new DatabaseHelper();
+	}
+
+	public DatabaseHelper mDatabaseHelper;
+
+	/**
+	 * 执行sql语句
+	 * 
+	 * @param string
+	 * @throws jsqlite.Exception
+	 */
+	public List<AddressBean> getResultBySql(String sql, final String tableName)
+			throws jsqlite.Exception {
+		if (StringUtil.isEmpty(sql))
+			return null;
+		LogUtil.LoLoLog().e(sql);
+		List<AddressBean> list = new ArrayList<AddressBean>();
+		TableResult result = mDatabaseHelper.getSPDatabase().get_table(sql);
+			
+		AddressBean addressBean = null;
+		if (null == result) {
+			return null;
+		}
+		String[] arrayColums = result.column;
+		Vector<String[]> vector = result.rows;
+		for (int j = 0; j < vector.size(); j++) {
+			String[] columnStrings = vector.get(j);
+			addressBean = toAddressBean(arrayColums, columnStrings);
+			if (addressBean != null) {
+				addressBean.setTableName(tableName);
+				list.add(addressBean);
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * 生成 AddressBean
+	 * 
+	 * @param arrayColums
+	 * @param columnStrings
+	 * @return
+	 */
+	private AddressBean toAddressBean(String[] arrayColums,
+			String[] columnStrings) {
+		// TODO Auto-generated method stub
+		AddressBean addressBean = new AddressBean();
+		for (int i = 0; i < columnStrings.length; i++) {
+
+			if (arrayColums[i].equalsIgnoreCase("ID")) {
+				if (StringUtil.isEmpty(columnStrings[i])) {
+					return null;
+				}
+				addressBean.setId(columnStrings[i]);
+			} else if (arrayColums[i].equalsIgnoreCase("NAME")) {
+				addressBean.setName(columnStrings[i]);
+			} else if (arrayColums[i].equalsIgnoreCase("SUBNAME")) {
+				if (StringUtil.isEmpty(columnStrings[i])) {
+					return null;
+				}
+				addressBean.setSubname(columnStrings[i]);
+			} else if (arrayColums[i].equalsIgnoreCase("GEOMETRY")) {
+				if (StringUtil.isEmpty(columnStrings[i])) {
+					return null;
+				}
+				addressBean.setGeometry(columnStrings[i]);
+			} else if (arrayColums[i].equalsIgnoreCase("CENTROID")) {
+				addressBean.setCentroid(columnStrings[i]);
+			}
+
+		}
+		return addressBean;
+	}
+
+	/**
+	 * 执行sql语句
+	 * 
+	 * @param string
+	 * @throws jsqlite.Exception
+	 */
+	public List<Map<String, String>> getResultByName(String sql)
+			throws jsqlite.Exception {
+		if (StringUtil.isEmpty(sql))
+			return null;
+		LogUtil.LoLoLog().e(sql);
+		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		TableResult result = mDatabaseHelper.getSPDatabase().get_table(sql);
+		// mDatabaseHelper.getSPDatabase().e
+		Map<String, String> map = null;
+		if (null == result) {
+			return null;
+		}
+		String[] arrayColum = result.column;
+		Vector<String[]> vector = result.rows;
+		for (int j = 0; j < vector.size(); j++) {
+			map = new HashMap<String, String>();
+			String[] columnStrings = vector.get(j);
+			for (int i = 0; i < columnStrings.length; i++) {
+				map.put(arrayColum[i], columnStrings[i]);
+			}
+			list.add(map);
+		}
+		return list;
+	}
+
+	/**
+	 * 执行sql语句
+	 * 
+	 * @param string
+	 * @throws jsqlite.Exception
+	 */
+	public Map<String, Object> getResultByID(String sql)
+			throws jsqlite.Exception {
+
+		if (StringUtil.isEmpty(sql))
+			return null;
+		LogUtil.LoLoLog().e(sql);
+
+		TableResult result = mDatabaseHelper.getSPDatabase().get_table(sql);
+		Map<String, Object> map = null;
+		if (null == result) {
+			return null;
+		}
+		String[] arrayColum = result.column;
+		Vector<String[]> vector = result.rows;
+
+		for (int j = 0; j < vector.size(); j++) {
+			map = new HashMap<String, Object>();
+			String[] columnStrings = vector.get(j);
+			for (int i = 0; i < columnStrings.length; i++) {
+				map.put(arrayColum[i], columnStrings[i]);
+			}
+
+		}
+		return map;
+	}
+
+	/**
+	 * 执行sql语句
+	 * 
+	 * @param string
+	 * @throws jsqlite.Exception
+	 */
+	public List<AddressBean> getRimResult(String sql) throws jsqlite.Exception {
+		List<AddressBean> addressBeans = new ArrayList<AddressBean>();
+		if (StringUtil.isEmpty(sql))
+			return null;
+		LogUtil.LoLoLog().e(sql);
+
+		Callback cb = new Callback() {
+
+			@Override
+			public void types(String[] arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public boolean newrow(String[] arg0) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			@Override
+			public void columns(String[] arg0) {
+				// TODO Auto-generated method stub
+				String[] arg1 = arg0;
+				LogUtil.LoLoLog().d(arg1.length);
+			}
+		};
+
+		mDatabaseHelper.getSPDatabase().exec(sql, cb);
+
+		return addressBeans;
+	}
+
+}

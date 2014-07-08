@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/pop_layer_bg"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/ll_pop_basemap_type"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/choose_basemap_bg" />
+
+        <RelativeLayout
+            android:id="@+id/rl_pop_basemap_vector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp" >
+
+            <Button
+                android:id="@+id/btn_pop_basemap_vector"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/selector_btn_pop_basemap_vector" />
+
+            <ImageView
+                android:id="@+id/img_basemap_vector"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btn_pop_basemap_vector"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/basemap_vector" />
+
+            <ImageView
+                android:id="@+id/img_basemap_is_select_vector"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/img_basemap_vector"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@id/img_basemap_vector"
+                android:background="@drawable/basemap_is_select" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rl_pop_basemap_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp" >
+
+            <Button
+                android:id="@+id/btn_pop_basemap_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/selector_btn_pop_basemap_img" />
+
+            <ImageView
+                android:id="@+id/img_basemap_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btn_pop_basemap_img"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/basemap_img" />
+
+            <ImageView
+                android:id="@+id/img_basemap_is_select_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/img_basemap_img"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@id/img_basemap_img"
+                android:background="@drawable/basemap_is_select"
+                android:visibility="invisible" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rl_pop_basemap_terrain"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:visibility="gone" >
+
+            <Button
+                android:id="@+id/btn_pop_basemap_terrain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_pop_basemap_terrain" />
+
+            <ImageView
+                android:id="@+id/img_basemap_terrain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btn_pop_basemap_terrain"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/basemap_terrain" />
+
+            <ImageView
+                android:id="@+id/img_basemap_is_select_terrain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/img_basemap_terrain"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@id/img_basemap_terrain"
+                android:background="@drawable/basemap_is_select"
+                android:visibility="invisible" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <ExpandableListView
+        android:id="@+id/ex_pop_map_type"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:layout_weight="1"
+        android:cacheColorHint="#00000000" >
+    </ExpandableListView>
+
+</LinearLayout>

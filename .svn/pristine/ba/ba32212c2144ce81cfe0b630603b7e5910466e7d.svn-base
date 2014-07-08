@@ -1,0 +1,198 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.adapter;
+
+import java.util.List;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.bean.TitleBean;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
+import android.widget.ExpandableListView.OnGroupExpandListener;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
+
+/**
+ * 
+ * @ClassName: ExAdapter
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月2日 下午1:44:14
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class ExRightTitleAdapter extends BaseExpandableListAdapter {
+	private Context mContext;
+	// private List<List<GroupLayer>> childData;// 小组成员
+	private List<TitleBean> groupData;// 大组成员
+	private MapView mapView;
+
+	/**
+	 * 
+	 */
+	public ExRightTitleAdapter(Context context, List<TitleBean> catalogs,
+			MapView mapView) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.groupData = catalogs;
+		this.mapView = mapView;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChild(int, int)
+	 */
+	@Override
+	public Object getChild(int groupPosition, int childPosition) {
+		// TODO Auto-generated method stub
+
+		return groupData.get(groupPosition).getGroupLayers().get(childPosition)
+				.getName();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChildId(int, int)
+	 */
+	@Override
+	public long getChildId(int groupPosition, int childPosition) {
+		// TODO Auto-generated method stub
+		return childPosition;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChildView(int, int, boolean,
+	 * android.view.View, android.view.ViewGroup)
+	 */
+	@Override
+	public View getChildView(final int groupPosition, final int childPosition,
+			boolean isLastChild, View convertView, ViewGroup parent) {
+		// TODO Auto-generated method stub
+		View view = convertView;
+		if (view == null) {
+			view = LayoutInflater.from(mContext).inflate(
+					R.layout.ex_list_type_child, null);
+		}
+
+		if (childPosition % 2 == 0) {
+			view.setBackgroundResource(R.drawable.lv_bg_ou);
+		} else {
+			view.setBackgroundResource(R.drawable.lv_bg);
+		}
+		TextView txt_child_name = (TextView) view
+				.findViewById(R.id.txt_child_list_type_name);
+		txt_child_name.setText(groupData.get(groupPosition).getGroupLayers()
+				.get(childPosition).getName());// 设置大组成员名称
+
+		return view;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChildrenCount(int)
+	 */
+	@Override
+	public int getChildrenCount(int groupPosition) {
+		// TODO Auto-generated method stub
+		return groupData.get(groupPosition).getGroupLayers().size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroup(int)
+	 */
+	@Override
+	public Object getGroup(int groupPosition) {
+		// TODO Auto-generated method stub
+		return groupData.get(groupPosition).getName();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroupCount()
+	 */
+	@Override
+	public int getGroupCount() {
+		// TODO Auto-generated method stub
+		return groupData.size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroupId(int)
+	 */
+	@Override
+	public long getGroupId(int groupPosition) {
+		// TODO Auto-generated method stub
+		return groupPosition;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroupView(int, boolean,
+	 * android.view.View, android.view.ViewGroup)
+	 */
+	@Override
+	public View getGroupView(int groupPosition, boolean isExpanded,
+			View convertView, ViewGroup parent) {
+		// TODO Auto-generated method stub
+		View view = convertView;
+		if (view == null) {
+			view = LayoutInflater.from(mContext).inflate(
+					R.layout.ex_right_title_groups, null);
+		}
+
+		TextView title = (TextView) view
+				.findViewById(R.id.txt_right_title_group_name);
+
+		title.setText(getGroup(groupPosition).toString());// 设置大组成员名称
+		return view;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#hasStableIds()
+	 */
+	@Override
+	public boolean hasStableIds() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#isChildSelectable(int, int)
+	 */
+	@Override
+	public boolean isChildSelectable(int groupPosition, int childPosition) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+}

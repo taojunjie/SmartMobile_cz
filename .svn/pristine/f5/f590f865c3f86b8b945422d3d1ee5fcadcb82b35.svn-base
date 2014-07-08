@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal" >
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ploting_bg"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/iv_plot_pen1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_width_one" />
+
+        <ImageView
+            android:id="@+id/iv_plot_pen2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_width_two" />
+
+        <ImageView
+            android:id="@+id/iv_plot_pen3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_width_three" />
+
+        <ImageView
+            android:id="@+id/iv_plot_pen4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_width_four" />
+
+        <ImageView
+            android:id="@+id/iv_plot_color"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_color_red" />
+
+        <ImageView
+            android:id="@+id/iv_plot_pre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_pre" />
+
+        <ImageView
+            android:id="@+id/iv_plot_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_next" />
+
+        <ImageView
+            android:id="@+id/iv_plot_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_save" />
+
+        <ImageView
+            android:id="@+id/iv_plot_review"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_review" />
+
+        <ImageView
+            android:id="@+id/iv_plot_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_delete" />
+
+        <ImageView
+            android:id="@+id/iv_plot_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@drawable/selector_btn_plotting_close" />
+    </LinearLayout>
+
+</LinearLayout>

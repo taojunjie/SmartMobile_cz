@@ -1,0 +1,314 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.adapter;
+
+import java.util.List;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.bean.Catalog;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.esri.android.map.event.OnZoomListener;
+import com.esri.core.geometry.GeometryEngine;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.SpatialReference;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
+import android.widget.ExpandableListView.OnGroupExpandListener;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
+
+/**
+ * 
+ * @ClassName: ExAdapter
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月2日 下午1:44:14
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class ExAdapter extends BaseExpandableListAdapter {
+	private Context mContext;
+	// private List<List<GroupLayer>> childData;// 小组成员
+	private List<Catalog> groupData;// 大组成员
+	private MapView mapView;
+
+	/**
+	 * 
+	 */
+	public ExAdapter(Context context, List<Catalog> catalogs, MapView mapView) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.groupData = catalogs;
+		this.mapView = mapView;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChild(int, int)
+	 */
+	@Override
+	public Object getChild(int groupPosition, int childPosition) {
+		// TODO Auto-generated method stub
+
+		return groupData.get(groupPosition).getGroupLayers().get(childPosition)
+				.getAliasName();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChildId(int, int)
+	 */
+	@Override
+	public long getChildId(int groupPosition, int childPosition) {
+		// TODO Auto-generated method stub
+		return childPosition;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChildView(int, int, boolean,
+	 * android.view.View, android.view.ViewGroup)
+	 */
+	@Override
+	public View getChildView(final int groupPosition, final int childPosition,
+			boolean isLastChild, View convertView, ViewGroup parent) {
+		// TODO Auto-generated method stub
+		View view = convertView;
+		if (view == null) {
+			view = LayoutInflater.from(mContext).inflate(
+					R.layout.ex_list_child, null);
+		}
+		if (childPosition % 2 == 0) {  
+			view.setBackgroundResource(R.drawable.lv_bg_ou);
+		} else {
+			view.setBackgroundResource(R.drawable.lv_bg);
+		}
+
+		final LinearLayout ll_child_tool = (LinearLayout) view
+				.findViewById(R.id.ll_child_tool);
+
+		final Button btn_child_isvisible = (Button) view
+				.findViewById(R.id.btn_child_isvisible);
+
+		final Button btn_child_isvisible_p = (Button) view
+				.findViewById(R.id.btn_child_isvisible_p);
+		final String url = groupData.get(groupPosition).getGroupLayers()
+				.get(childPosition).getUrl();
+
+		final ArcGISDynamicMapServiceLayer dynamicMapServiceLayer = new ArcGISDynamicMapServiceLayer(
+				url);
+
+		if (groupData.get(groupPosition).getGroupLayers().get(childPosition)
+				.isVisible()) {
+			btn_child_isvisible.setVisibility(View.GONE);
+			btn_child_isvisible_p.setVisibility(View.VISIBLE);
+		} else {
+			btn_child_isvisible.setVisibility(View.VISIBLE);
+			btn_child_isvisible_p.setVisibility(View.GONE);
+		}
+		btn_child_isvisible_p.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				btn_child_isvisible_p.setVisibility(View.GONE);
+				btn_child_isvisible.setVisibility(View.VISIBLE);
+
+				if (mapView.getLayerByURL(url) != null
+						&& mapView.getLayerByURL(url).isVisible()) {
+					mapView.removeLayer(dynamicMapServiceLayer);
+				}
+				groupData.get(groupPosition).getGroupLayers()
+						.get(childPosition).setVisible(false);
+			}
+		});
+
+		btn_child_isvisible.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				btn_child_isvisible.setVisibility(View.GONE);
+				btn_child_isvisible_p.setVisibility(View.VISIBLE);
+				if (mapView.getLayerByURL(url) != null
+						&& !mapView.getLayerByURL(url).isVisible()) {
+					mapView.removeLayer(dynamicMapServiceLayer);
+				} else {
+					mapView.addLayer(dynamicMapServiceLayer);
+
+				}
+				groupData.get(groupPosition).getGroupLayers()
+						.get(childPosition).setVisible(true);
+
+			}
+		});
+
+		TextView txt_child_name = (TextView) view
+				.findViewById(R.id.txt_child_name);
+		txt_child_name.setText(groupData.get(groupPosition).getGroupLayers()
+				.get(childPosition).getName());// 设置大组成员名称
+		SeekBar seekbar_child = (SeekBar) view.findViewById(R.id.seekbar_child);
+		seekbar_child.setProgress(100);
+		final TextView txt_child_seekbar = (TextView) view
+				.findViewById(R.id.txt_child_seekbar);
+
+		seekbar_child.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress,
+					boolean fromUser) {
+				if (!groupData.get(groupPosition).getGroupLayers()
+						.get(childPosition).isVisible()) {
+					ToastUtil.makeToastInBottom("请先开启图层");
+				} else {
+					// TODO Auto-generated method stub
+					float progress_f = (float) ((seekBar.getProgress()) * (0.01));
+					txt_child_seekbar.setText(seekBar.getProgress() + "%");
+					// txt_child_seekbar.setText(progress_f + "");
+					mapView.getLayerByURL(url).setOpacity(progress_f);
+				}
+
+			}
+		});
+		Button btn_child_location = (Button) view
+				.findViewById(R.id.btn_child_location);
+		btn_child_location.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+
+				Point point = new Point(506410.0673, 3517009.6170);
+				final Point mapPoint = (Point) GeometryEngine.project(point,
+						SpatialReference.create(2437),
+						mapView.getSpatialReference());
+				mapView.centerAt(mapPoint, true);
+				mapView.setScale(200000);
+			}
+		});
+		return view;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getChildrenCount(int)
+	 */
+	@Override
+	public int getChildrenCount(int groupPosition) {
+		// TODO Auto-generated method stub
+		return groupData.get(groupPosition).getGroupLayers().size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroup(int)
+	 */
+	@Override
+	public Object getGroup(int groupPosition) {
+		// TODO Auto-generated method stub
+		return groupData.get(groupPosition).getName();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroupCount()
+	 */
+	@Override
+	public int getGroupCount() {
+		// TODO Auto-generated method stub
+		return groupData.size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroupId(int)
+	 */
+	@Override
+	public long getGroupId(int groupPosition) {
+		// TODO Auto-generated method stub
+		return groupPosition;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#getGroupView(int, boolean,
+	 * android.view.View, android.view.ViewGroup)
+	 */
+	@Override
+	public View getGroupView(int groupPosition, boolean isExpanded,
+			View convertView, ViewGroup parent) {
+		// TODO Auto-generated method stub
+		View view = convertView;
+		if (view == null) {
+			view = LayoutInflater.from(mContext).inflate(
+					R.layout.ex_list_groups, null);
+		}
+
+		TextView title = (TextView) view.findViewById(R.id.txt_group_name);
+//		title.setPadding(40, 0, 0, 0);
+		if (isExpanded) {
+			title.setBackgroundResource(R.drawable.spinner_bg_p);
+		} else {
+			title.setBackgroundResource(R.drawable.spinner_bg);
+		}
+		title.setText(getGroup(groupPosition).toString());// 设置大组成员名称
+		return view;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#hasStableIds()
+	 */
+	@Override
+	public boolean hasStableIds() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.ExpandableListAdapter#isChildSelectable(int, int)
+	 */
+	@Override
+	public boolean isChildSelectable(int groupPosition, int childPosition) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+}

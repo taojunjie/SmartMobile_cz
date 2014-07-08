@@ -1,0 +1,303 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.view.pop;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import jsqlite.Exception;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.adapter.AttributeAdapter;
+import com.android.smartmobile.cz.bean.AddressBean;
+import com.android.smartmobile.cz.db.SDBHelper;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.service.PullParseGHFieldService;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.esri.android.map.MapView;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.view.GestureDetector;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+
+/**
+ * 
+ * @ClassName: PopListManager
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月3日 下午19:52:17
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class PopGestureManager implements InitActivity, OnTouchListener,
+		android.view.GestureDetector.OnGestureListener {
+	private Context mContext;
+	private MapView mainMapView = null;
+	// 声明PopupWindow对象的引用
+	private PopupWindow popupWindow = null;
+	private EditText edit_gesture;
+	private ListView lv_gesture;
+	private AttributeAdapter rightListAdapter;
+	private List<String> mList;
+	private Handler mHandler = new Handler();
+	private Map<String, Object> map;
+	private SDBHelper sdbHelper;
+	private GestureDetector mGestureDetector;
+	private static final int FLING_MIN_DISTANCE = 100;
+	private static final int FLING_MIN_VELOCITY = 200;
+	private HashMap<String, Object> field_hashMap = null;
+
+	public void setPopupWindow(PopupWindow popupWindow) {
+		this.popupWindow = popupWindow;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param mainMapView
+	 */
+	public PopGestureManager(Context context, MapView mainMapView) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mainMapView = mainMapView;
+		mGestureDetector = new GestureDetector(this);
+	}
+
+	@SuppressWarnings("unchecked")
+	void initDa(AddressBean addressBean) {
+
+		String layerName = addressBean.getLayerName();
+		field_hashMap = (HashMap<String, Object>) PullParseGHFieldService
+				.getArrByName(layerName);
+		ArrayList<String> strings = (ArrayList<String>) field_hashMap
+				.get("DisplayOrder");
+
+		new GetDataAsyncTask().execute(toSql(strings, addressBean));
+
+	}
+
+	String toSql(ArrayList<String> strings, AddressBean addressBean) {
+		String s = "";
+		for (String string : strings) {
+			s += string + ",";
+		}
+
+		return "SELECT " + s.substring(0, s.length() - 1) + " FROM "
+				+ addressBean.getTableName() + " WHERE PK_UID="
+				+ addressBean.getId();
+
+	}
+
+	class GetDataAsyncTask extends AsyncTask<String, Void, Map<String, Object>> {
+
+		ProgressDialog pdialog;
+
+		@Override
+		protected void onPostExecute(Map<String, Object> result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+
+			if (result != null && result.size() != 0) {
+				rightListAdapter = new AttributeAdapter(mContext, result,field_hashMap);
+				lv_gesture.setAdapter(rightListAdapter);
+			} else {
+				ToastUtil.makeToastInBottom("没有匹配的数据");
+			}
+
+			if (pdialog.isShowing()) {
+				pdialog.dismiss();
+			}
+
+		}
+
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+			pdialog = new ProgressDialog(mContext);
+			pdialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+			pdialog.setMessage("正在查询...");
+			pdialog.show();
+		}
+
+		@Override
+		protected Map<String, Object> doInBackground(String... params) {
+			// TODO Auto-generated method stub
+			LogUtil.LoLoLog().d((params[0]));
+			Map<String, Object> map = null;
+			try {
+				sdbHelper = new SDBHelper();
+				map = sdbHelper.getResultByID(params[0]);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return map;
+		}
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+		mList = new ArrayList<String>();
+		for (int i = 0; i < 30; i++) {
+			mList.add(i + ".this is a test ");
+		}
+
+	}
+
+	/***
+	 * 获取PopupWindow实例
+	 */
+	public PopupWindow getPopupWindow() {
+		return popupWindow;
+	}
+
+	public void init(AddressBean addressBean) {
+		initDa(addressBean);
+		// TODO Auto-generated method stub
+
+		// 获取自定义布局文件pop.xml的视图
+		View popupWindow_view = LayoutInflater.from(mContext).inflate(
+				R.layout.pop_gesture, null, false);
+		// 创建PopupWindow实例,200,150分别是宽度和高度
+		popupWindow = new PopupWindow(popupWindow_view, 300,
+				LayoutParams.MATCH_PARENT);
+		// 设置动画效果
+		popupWindow.setAnimationStyle(R.style.AnimationFade);
+		popupWindow.setBackgroundDrawable(new BitmapDrawable());
+		popupWindow.setOutsideTouchable(true);
+		popupWindow.setFocusable(true);
+		popupWindow.setTouchable(true);
+		popupWindow.update();
+		// 点击其他地方消失
+
+		popupWindow_view.setOnTouchListener(this);
+
+		// pop.xml视图里面的控件
+
+		edit_gesture = (EditText) popupWindow_view
+				.findViewById(R.id.edit_gesture);
+
+		lv_gesture = (ListView) popupWindow_view.findViewById(R.id.lv_gesture);
+		lv_gesture.setOnTouchListener(this);
+		lv_gesture.setDivider(null);
+
+		lv_gesture.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				// TODO Auto-generated method stub
+				// ToastUtil.makeToastInBottom(mList.get(arg2));
+			}
+		});
+
+		popupWindow_view.findViewById(R.id.btn_gesture_close)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						if (popupWindow != null && popupWindow.isShowing()) {
+							popupWindow.dismiss();
+							popupWindow = null;
+						}
+					}
+				});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void initView() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		// TODO Auto-generated method stub
+		return mGestureDetector.onTouchEvent(event);
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+			float velocityY) {
+		// TODO Auto-generated method stub
+		if (e2.getX() - e1.getX() > FLING_MIN_DISTANCE
+				&& Math.abs(velocityX) > FLING_MIN_VELOCITY) {
+			// 当像右侧滑动的时候
+			popupWindow.dismiss();
+			popupWindow = null;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean onDown(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+			float distanceY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent e) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+}

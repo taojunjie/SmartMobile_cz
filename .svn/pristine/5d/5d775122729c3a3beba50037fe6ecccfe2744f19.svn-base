@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="list_bg">#FAFCFD</color>
+    <color name="list_bg_ou">#FFFFFF</color>
+    <color name="ploygon_all_1">#CD950C</color>
+    <color name="ploygon_all_2">#9AFF9A</color>
+    <color name="ployline_all_1">#CD1076</color>
+    <color name="ployline_all_2">#FFB5C5</color>
+    <color name="ploygon_click">#FFFFFF</color>
+
+</resources>

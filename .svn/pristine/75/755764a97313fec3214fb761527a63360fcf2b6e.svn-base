@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppConfig >
+	<modules width="" height="">
+		<module >
+			<title>one_map</title>
+			<img_nomal>one_map_nomal</img_nomal>
+			<img_press>one_map_press</img_press>
+			
+			
+		</module>
+		<module >
+			<title>project_explorer</title>
+			<img_nomal>project_explorer_nomal</img_nomal>
+			<img_press>project_explorer_press</img_press>
+		</module>
+		<module >
+			<title>briefcase</title>
+			<img_nomal>briefcase_nomal</img_nomal>
+			<img_press>briefcase_press</img_press>
+		</module>
+		
+		<module >
+			<title>meeting_notice</title>
+			<img_nomal>meeting_notice_nomal</img_nomal>
+			<img_press>meeting_notice_press</img_press>
+		</module>
+		
+	</modules>
+</AppConfig>

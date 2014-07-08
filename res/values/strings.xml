@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- string -->
+    <string name="hello">Hello World, SmartMobile_czActivity!</string>
+    <string name="app_name">常州移动规划</string>
+    <string name="text_shadowgraph">影像图</string>
+
+    <!-- string-array -->
+    <string-array name="presidents_array">
+        <item>规划工程红线</item>
+        <item>规划用地红线</item>
+        <item>规划道路</item>
+    </string-array>
+
+</resources>

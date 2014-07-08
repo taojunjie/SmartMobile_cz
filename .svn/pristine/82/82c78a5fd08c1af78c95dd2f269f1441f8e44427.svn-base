@@ -1,0 +1,149 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.view.pop;
+
+import java.util.List;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.adapter.LegendAdapter;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.esri.android.map.MapView;
+import com.esri.core.map.Legend;
+
+import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Handler;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.Spinner;
+
+/**
+ * 
+ * @ClassName: PopListManager
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月3日 下午19:52:17
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class PopLegendManager implements InitActivity {
+	private Context mContext;
+	private MapView mainMapView = null;
+	// 声明PopupWindow对象的引用
+	private PopupWindow popupWindow = null;
+	private ListView lv_legend;
+	private LegendAdapter legendAdapter;
+	private List<Legend> mList;
+	private Handler mHandler = new Handler();
+
+	public void setPopupWindow(PopupWindow popupWindow) {
+		this.popupWindow = popupWindow;
+	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param mainMapView
+	 */
+	public PopLegendManager(Context context, MapView mainMapView,
+			List<Legend> legends) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mainMapView = mainMapView;
+		this.mList = legends;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+
+	}
+
+	/***
+	 * 获取PopupWindow实例
+	 */
+	public PopupWindow getPopupWindow() {
+		return popupWindow;
+	}
+
+	/**
+	 * 创建PopupWindow
+	 */
+	@Override
+	public void initView() {
+
+		initData();
+		// TODO Auto-generated method stub
+
+		// 获取自定义布局文件pop.xml的视图
+		View popupWindow_view = LayoutInflater.from(mContext).inflate(
+				R.layout.pop_legend, null);
+		// 创建PopupWindow实例,200,150分别是宽度和高度
+		popupWindow = new PopupWindow(popupWindow_view, 400,
+				LayoutParams.MATCH_PARENT);
+		// 设置动画效果
+		popupWindow.setAnimationStyle(R.style.AnimationFade_web);
+		popupWindow.setBackgroundDrawable(new BitmapDrawable());
+		popupWindow.setFocusable(true);
+		// pop.xml视图里面的控件
+
+		lv_legend = (ListView) popupWindow_view.findViewById(R.id.lv_legend);
+		legendAdapter = new LegendAdapter(mContext, mList);
+		lv_legend.setAdapter(legendAdapter);
+
+		lv_legend.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				// TODO Auto-generated method stub
+				ToastUtil.makeToastInBottom(mList.get(arg2).getLabel());
+			}
+		});
+
+		popupWindow_view.findViewById(R.id.btn_legend_close)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						if (popupWindow != null && popupWindow.isShowing()) {
+							popupWindow.dismiss();
+							popupWindow = null;
+						}
+					}
+				});
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+
+	}
+
+}

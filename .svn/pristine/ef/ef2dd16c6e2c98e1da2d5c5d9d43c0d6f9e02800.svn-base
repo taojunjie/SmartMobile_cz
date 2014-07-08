@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFF"
+    android:padding="5dp" >
+
+    <TextView
+        android:id="@+id/txt_callout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:singleLine="true"
+        android:text="adad"
+        android:textColor="#080808"
+        android:textSize="16sp"
+        android:width="200dp" />
+
+    <Button
+        android:id="@+id/btn_callout_go"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@id/txt_callout"
+        android:background="@drawable/callout_go" />
+
+</RelativeLayout>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<AppConfig version="">	
+<!-- 应用程序标题配置,暂时不用，保留使用 -->
+<ApplicationTitle>常州市规划移动端</ApplicationTitle>
+<!-- 左下角软件logo,暂时不用，保留使用 --> 
+<maplogo name="常州市规划局"></maplogo>
+
+<!-- 公司外网IP 180.166.125.230 内网192.168.1.215 -->
+<!-- 默认底图配置,启动时自动加载 -->
+<basemap>
+    <InitExtent xmin="440728.865097921" ymin="3472173.92749007" xmax="558873.655030235" ymax="3557773.17151651" spatialReference="2437"> </InitExtent>
+        <resolution>264.583862501058,132.291931250529,66.1459656252646,33.0729828126323,16.9333672000677,8.46668360003387,4.23334180001693,2.11667090000847,1.05833545000423</resolution>
+	    <scale>1000000,500000,250000,125000,64000,32000,16000,8000,4000</scale>
+   <mapsgement>
+	  <mapitem name="矢量" type="WMTS" url="http://180.166.125.230:18180/ArcGIS/rest/services/vector/MapServer">矢量</mapitem>
+	  <mapitem name="影像" type="WMTS" url="">影像</mapitem>
+	</mapsgement>
+	
+	<workMap>
+	  <catalog name="规划红线">
+		<groupLayer name="规划工程红线" aliasName="" type="WMS" visibleLayers="0"><![CDATA[file:///mnt/sdcard/SmartMobile_cz/cache/tpk/规划工程红线.tpk]]></groupLayer>
+		<groupLayer name="规划用地红线" aliasName="" type="WMS" visibleLayers="0"><![CDATA[file:///mnt/sdcard/SmartMobile_cz/cache/tpk/规划用地红线.tpk]]></groupLayer>
+	  </catalog>
+	  <catalog name="总规">
+		<groupLayer name="规划道路" aliasName="" type="WMS" visibleLayers="0,1"><![CDATA[file:///mnt/sdcard/SmartMobile_cz/cache/tpk/规划道路.tpk]]></groupLayer>
+	  </catalog>
+	</workMap>
+</basemap>
+
+
+
+<project>
+   <!--  <exploreUrl><![CDATA[http://online.chinadci.com/zhjg/]]></exploreUrl> -->
+    <exploreUrl><![CDATA[http://www.baidu.com]]></exploreUrl>
+</project>
+
+
+
+
+<offline_Data>
+     <layer name="规划红线">
+ 	 	    <subLayerList count="3">
+ 	 	        <subLayer name="规划工程红线" titleField="项目名称" subTitleField="建设单位"  canQuery="YES" canStatistics="NO" geoType="POLYGON">
+		 		        <symbol type="UniqueValue">发证日期</symbol>
+				  	    <queryFields>
+				  	         <queryField fieldName="NAME" aliasName="项目名称" AGSFieldType="AGSFieldTypeString" canEnumable="YES"></queryField>
+					  	     <queryField fieldName="TYPE" aliasName="道路类型" AGSFieldType="AGSFieldTypeString" canEnumable="YES"></queryField>
+					  	     <queryField fieldName="WIDTH" aliasName="道路宽度" AGSFieldType="AGSFieldTypeDouble" canEnumable="YES" defaultOperator="="></queryField>
+					    </queryFields>
+					    <url updateTime="20130711 22:10:23"><![CDATA[http://49.115.210.66/offline_data/PGIS_gcda.shp]]></url>
+  	 	     	</subLayer>
+ 	 	        <subLayer name="规划用地红线" titleField="项目名称" subTitleField="用地性质"  canQuery="YES" canStatistics="NO" geoType="POLYGON">
+		 		        <symbol type="UniqueValue">用地性质</symbol>
+				  	    <queryFields>
+				  	         <queryField fieldName="NAME" aliasName="项目名称" AGSFieldType="AGSFieldTypeString" canEnumable="YES"></queryField>
+					  	     <queryField fieldName="TYPE" aliasName="用地性质" AGSFieldType="AGSFieldTypeString" canEnumable="YES"></queryField>
+					  	     <queryField fieldName="WIDTH" aliasName="建设单位" AGSFieldType="AGSFieldTypeDouble" canEnumable="YES" defaultOperator="="></queryField>
+					    </queryFields>
+					    <url updateTime="20130711 22:10:23"><![CDATA[http://49.115.210.66/offline_data/PGIS_ydxkz.shp]]></url>
+  	 	      	</subLayer>
+ 	 	    </subLayerList>
+ 	 </layer>
+ 	 
+      <layer name="总规">
+ 	 	    <subLayerList count="1">
+ 	 	        <subLayer name="规划道路" titleField="ID" subTitleField="SHAPE_LEN"  canQuery="YES" canStatistics="NO" geoType="POLYLINE">
+		 		        <symbol type="UniqueValue">PK_UID</symbol>
+				  	    <queryFields>
+				  	         <queryField fieldName="NAME" aliasName="项目名称" AGSFieldType="AGSFieldTypeString" canEnumable="YES"></queryField>
+					  	     <queryField fieldName="TYPE" aliasName="道路类型" AGSFieldType="AGSFieldTypeString" canEnumable="YES"></queryField>
+					  	     <queryField fieldName="WIDTH" aliasName="道路宽度" AGSFieldType="AGSFieldTypeDouble" canEnumable="YES" defaultOperator="="></queryField>
+					    </queryFields>
+					    <url updateTime="20130711 22:10:23"><![CDATA[http://49.115.210.66/offline_data/PGIS_road_1.shp]]></url>	
+  	 	     	</subLayer>
+ 	 	    </subLayerList>
+ 	 </layer>
+</offline_Data>
+
+
+
+
+<!-- 瓦片图层集合配置，wmts或arcgis server服务图层的配置 -->
+<layerParamDefine>	
+    
+	<layer name="矢量">
+	  <params>
+	    <downloadable>NO</downloadable>
+	    <unit>meter</unit>
+	    <InitialExtent xmin="499991.768661709" ymin="3514369.39218337" xmax="501253.833685839" ymax="3515283.79401217" spatialReference="2437"> </InitialExtent>
+	    <FullExtent xmin="423267.213755723" ymin="3475591.95285919" xmax="576335.306372433" ymax="3554355.1461474" spatialReference="2437"/>
+	    <Image dpi="96" width="256" format="png" compressionQuality="0"/>
+	    <OriginPoint x="-5123300" y="10002300" spatialReference="2437"/>
+	    <LODInfo Levels="8" InitialScale="600000" InitialResolution="156543.0339280390625" MiniLevel="1"/>
+	    <tileurls>
+	      <level minlevel="0" maxlevel="9"><![CDATA[http://49.115.210.66/ArcGIS/rest/services/vector/MapServer/tile/%d/%d/%d.png]]></level>
+	    </tileurls>
+	    <tpk><![CDATA[http://127.0.0.1/]]></tpk>
+	  </params>
+	</layer>
+	
+	<layer name="规划道路">
+	  <params>
+	    <downloadable>NO</downloadable>
+	    <unit>meter</unit>
+	    <InitialExtent xmin="464621.627282703" ymin="3478182.11262065" xmax="537382.189470494" ymax="3554382.26502095" spatialReference="2437"/>
+	    <FullExtent xmin="429564.265501313" ymin="3477189.92313627" xmax="572439.551251884" ymax="3555374.45450533" spatialReference="2437"/>
+	    <Image dpi="96" width="256" format="png" compressionQuality="0"/>
+	    <OriginPoint x="-5123300" y="10002300" spatialReference="2437"/>
+	    <LODInfo Levels="5" InitialScale="300000" InitialResolution="156543.0339280390625" MiniLevel="1"/>
+	    <tileurls>
+	        <!-- <level minlevel="0" maxlevel="7"><![CDATA[http://49.115.210.66/ArcGIS/rest/services/TEST_DL/MapServer/tile/%d/%d/%d.png]]></level> -->
+	      <level minlevel="0" maxlevel="7"><![CDATA[http://49.115.210.66/ArcGIS/rest/services/TEST_DL/MapServer/tile/%d/%d/%d.png]]></level>
+	    </tileurls>
+	    <tpk><![CDATA[http://127.0.0.1/]]></tpk>
+	  </params>
+	</layer>
+	
+	<layer name="工程红线">
+	  <params>
+	    <downloadable>NO</downloadable>
+	    <unit>meter</unit>
+	    <InitialExtent xmin="464621.627282703" ymin="3478182.11262065" xmax="537382.189470494" ymax="3554382.26502095" spatialReference="2437"/>
+	    <FullExtent xmin="429564.265501313" ymin="3477189.92313627" xmax="572439.551251884" ymax="3555374.45450533" spatialReference="2437"/>
+	    <Image dpi="96" width="256" format="png" compressionQuality="0"/>
+	    <OriginPoint x="-5123300" y="10002300" spatialReference="2437"/>
+	    <LODInfo Levels="5" InitialScale="300000" InitialResolution="156543.0339280390625" MiniLevel="1"/>
+	    <tileurls>
+	      <level minlevel="0" maxlevel="7"><![CDATA[http://49.115.210.66/ArcGIS/rest/services/TEST_GCHX/MapServer/tile/%d/%d/%d.png]]></level>
+	    </tileurls>
+	    <tpk><![CDATA[http://127.0.0.1/]]></tpk>
+	  </params>
+	</layer>
+	
+	<layer name="用地红线">
+	  <params>
+	    <downloadable>NO</downloadable>
+	    <unit>meter</unit>
+	    <InitialExtent xmin="464621.627282703" ymin="3478182.11262065" xmax="537382.189470494" ymax="3554382.26502095" spatialReference="2437"/>
+	    <FullExtent xmin="429564.265501313" ymin="3477189.92313627" xmax="572439.551251884" ymax="3555374.45450533" spatialReference="2437"/>
+	    <Image dpi="96" width="256" format="png" compressionQuality="0"/>
+	    <OriginPoint x="-5123300" y="10002300" spatialReference="2437"/>
+	    <LODInfo Levels="5" InitialScale="300000" InitialResolution="156543.0339280390625" MiniLevel="1"/>
+	    <tileurls>
+	      <level minlevel="0" maxlevel="7"><![CDATA[http://49.115.210.66/ArcGIS/rest/services/TEST_YDHX/MapServer/tile/%d/%d/%d.png]]></level>
+	    </tileurls>
+	    <tpk><![CDATA[http://127.0.0.1/]]></tpk>
+	  </params>
+	</layer>
+</layerParamDefine>
+
+
+
+
+
+</AppConfig>
+

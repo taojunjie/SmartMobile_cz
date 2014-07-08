@@ -1,0 +1,528 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.activity;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.smartmobile.cz.R;
+import com.android.smartmobile.cz.bean.AddressBean;
+import com.android.smartmobile.cz.bean.Module;
+import com.android.smartmobile.cz.bean.Modules;
+import com.android.smartmobile.cz.bean.ScaleBean;
+import com.android.smartmobile.cz.bean.SubLayer;
+import com.android.smartmobile.cz.bean.TitleBean;
+import com.android.smartmobile.cz.finals.Constants;
+import com.android.smartmobile.cz.interf.InitActivity;
+import com.android.smartmobile.cz.listener.LooLongPressListener;
+import com.android.smartmobile.cz.listener.LooSingleTapListener;
+import com.android.smartmobile.cz.listener.MapDefaultListener;
+import com.android.smartmobile.cz.map.LooMapControl;
+import com.android.smartmobile.cz.model.BaseActivity;
+import com.android.smartmobile.cz.model.MyApplication;
+import com.android.smartmobile.cz.service.PullParseConfigService;
+import com.android.smartmobile.cz.util.DateUtil;
+import com.android.smartmobile.cz.util.LogUtil;
+import com.android.smartmobile.cz.util.MapHelper;
+import com.android.smartmobile.cz.util.ToastUtil;
+import com.android.smartmobile.cz.view.BaseMapToolView;
+import com.android.smartmobile.cz.view.MainLeftListView;
+import com.android.smartmobile.cz.view.MainWebView;
+import com.android.smartmobile.cz.view.pop.PopRightTitleManager;
+import com.esri.android.map.GraphicsLayer;
+import com.esri.android.map.MapView;
+import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
+import com.esri.android.map.event.OnStatusChangedListener;
+import com.esri.android.map.event.OnZoomListener;
+
+/**
+ * 
+ * @ClassName:
+ * @Description:
+ * @author
+ * @date 2013年7月31日 下午1:15:53
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ */
+
+public class MainActivity extends BaseActivity implements InitActivity {
+	private MapView mapView;
+	private MapHelper mapHelper;
+	private Context mContext;
+	private RelativeLayout rl_main_scale;
+	private LinearLayout ll_main_menu_left, ll_main_menu_left_content,
+			ll_right_toolmenu, ll_main_menu_right, ll_main_list_left, ll_web,
+			ll_main_right_title, ll_main_layermanager;
+	private TextView txt_main_scale_down, txt_main_scale, txt_main_scale_lever;
+	private Button btn_left_menu_setting;
+	private MainLeftListView mainLeftListView;
+	private PopRightTitleManager popRightTitleManager;
+	private MainWebView mainWebView;
+	private GraphicsLayer keyGraphicsLayer, rimGraphicsLayer,
+			singleHighlightGraphicsLayer;
+	private boolean isFirst = false;
+	private boolean isWebFirst = false;
+	private Handler handler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			// TODO Auto-generated method stub
+			super.handleMessage(msg);
+
+			switch (msg.what) {
+			case Constants.WHAT_REFRESH_ITEM_CLICK:
+				Bundle bundle = msg.getData();
+				if (bundle.getBoolean("isScaleShow")) {
+					rl_main_scale.setVisibility(View.VISIBLE);
+				}
+
+				// rimGraphicsLayer.removeAll();
+				// keyGraphicsLayer.removeAll();
+				singleHighlightGraphicsLayer.removeAll();
+				break;
+
+			case Constants.WHAT_REFRESH_SCALE_LEVER:
+				ScaleBean bean = mapHelper.getScaleBean(mapView.getScale());
+				txt_main_scale_down.setText("1:" + bean.getScale());
+				txt_main_scale.setText(bean.getCn());
+				txt_main_scale_lever.setText("当前级别：第" + bean.getLever()
+						+ "级 查询缓冲范围：" + bean.getBuffer() + "米");
+				break;
+
+			case Constants.WHAT_CLEAR_ALL_GRAPGICSLAYER:
+				rimGraphicsLayer.removeAll();
+				keyGraphicsLayer.removeAll();
+				singleHighlightGraphicsLayer.removeAll();
+				break;
+			default:
+				break;
+			}
+		}
+
+	};
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.android.smartmobile.cz.model.BaseActivity#onCreate(android.os.Bundle)
+	 */
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.layout_main);
+		mContext = MainActivity.this;
+
+		initView();
+		initData();
+
+		// 添加图层
+		mapHelper = new MapHelper(mapView, mContext);
+		mapHelper.AddBaseMapLayer(0);
+
+		mapView.setOnStatusChangedListener(new OnStatusChangedListener() {
+
+			private static final long serialVersionUID = 1L;
+
+			public void onStatusChanged(Object arg0, STATUS arg1) {
+				if (arg0 == mapView && arg1 == STATUS.INITIALIZED) {// 地图加载成功
+					Toast.makeText(mContext, "地图加载成功", Toast.LENGTH_SHORT)
+							.show();
+					keyGraphicsLayer = MyApplication.mApp.keyGraphicsLayer;
+					mapView.addLayer(keyGraphicsLayer);
+					// 初始化graphicsLayer
+
+					singleHighlightGraphicsLayer = MyApplication.mApp.singleHighlightGraphicsLayer;
+					mapView.addLayer(singleHighlightGraphicsLayer);
+
+					rimGraphicsLayer = MyApplication.mApp.rimGraphicsLayer;
+					mapView.addLayer(rimGraphicsLayer);
+
+					BaseMapToolView baseMapToolView = new BaseMapToolView(
+							mapView, mContext, ll_right_toolmenu,
+							ll_main_layermanager, null);
+					baseMapToolView.Init();
+
+					mainLeftListView = new MainLeftListView(mContext, mapView,
+							ll_main_list_left, keyGraphicsLayer);
+
+					mainWebView = new MainWebView(mContext, mapView, ll_web);
+
+					handler.sendEmptyMessage(Constants.WHAT_REFRESH_SCALE_LEVER);
+
+					// 设置地图监听
+					mapView.setOnTouchListener(new MapDefaultListener(mContext,
+							mapView, ll_main_layermanager));
+					mapView.setOnSingleTapListener(new LooSingleTapListener(
+							mapView, mContext, keyGraphicsLayer,
+							singleHighlightGraphicsLayer));
+					mapView.setOnLongPressListener(new LooLongPressListener(
+							mapView, mContext, rimGraphicsLayer,
+							ll_main_right_title));
+				}
+
+			}
+		});
+
+		mapView.setOnZoomListener(new OnZoomListener() {
+
+			@Override
+			public void preAction(float arg0, float arg1, double arg2) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void postAction(float arg0, float arg1, double arg2) {
+				// TODO Auto-generated method stub
+				if (mapView.getScale() < 8000) {
+					ToastUtil.makeToastInBottom("已经到最大了");
+
+				} else if (mapView.getScale() > 1000000) {
+					ToastUtil.makeToastInBottom("已经到最小了");
+
+				}
+				handler.sendEmptyMessage(Constants.WHAT_REFRESH_SCALE_LEVER);
+
+			}
+		});
+
+		mapView.setMapBackground(Color.WHITE, Color.TRANSPARENT, 0, 0);
+		mapView.setMaxResolution(264.583862501058);
+		mapView.setMinResolution(0.529167725002117);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mapView.unpause();
+		if (mapView.getCallout().isShowing())
+			mapView.getCallout().hide();
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initData()
+	 */
+	@Override
+	public void initData() {
+		// TODO Auto-generated method stub
+		Constants.HANDLER_MAIN = handler;
+		Modules modules;
+		try {
+			// 解析模板数据
+
+			modules = PullParseConfigService.getModules();
+			// 初始化左侧导航菜单
+			initLeftMenuView(modules.getList(), -1);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// 获取屏幕宽度
+		WindowManager wm = (WindowManager) mContext
+				.getSystemService(Context.WINDOW_SERVICE);
+
+		Constants.WINDOW_WIDTH = wm.getDefaultDisplay().getWidth();
+		Constants.WINDOW_HIGHT = wm.getDefaultDisplay().getHeight();
+
+		ViewTreeObserver vto1 = ll_main_menu_left.getViewTreeObserver();
+		vto1.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				ll_main_menu_left.getViewTreeObserver()
+						.removeGlobalOnLayoutListener(this);
+				Constants.MAIN_LEFT_MENU_WIDTH = ll_main_menu_left.getWidth();
+				LogUtil.LoLoLog().d(Constants.MAIN_LEFT_MENU_WIDTH);
+
+			}
+		});
+
+		ViewTreeObserver vto2 = ll_main_menu_right.getViewTreeObserver();
+		vto2.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				ll_main_menu_left.getViewTreeObserver()
+						.removeGlobalOnLayoutListener(this);
+				Constants.MAIN_RIGHT_MENU_WIDTH = ll_main_menu_right.getWidth();
+				LogUtil.LoLoLog().d(Constants.MAIN_RIGHT_MENU_WIDTH);
+			}
+		});
+
+		// keyGraphicsLayer = MyApplication.mApp.keyGraphicsLayer;
+		// mapView.addLayer(keyGraphicsLayer);
+		// // 初始化graphicsLayer
+		//
+		// singleHighlightGraphicsLayer =
+		// MyApplication.mApp.singleHighlightGraphicsLayer;
+		// mapView.addLayer(singleHighlightGraphicsLayer);
+		//
+		// rimGraphicsLayer = MyApplication.mApp.rimGraphicsLayer;
+		// mapView.addLayer(rimGraphicsLayer);
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#initView()
+	 */
+	@Override
+	public void initView() {
+		// TODO Auto-generated method stub
+		mapView = (MapView) this.findViewById(R.id.main_mapview);
+
+		ll_main_menu_left = (LinearLayout) this
+				.findViewById(R.id.ll_main_menu_left);
+		ll_main_menu_left_content = (LinearLayout) this
+				.findViewById(R.id.ll_main_menu_left_content);
+
+		ll_web = (LinearLayout) this.findViewById(R.id.ll_web);
+
+		btn_left_menu_setting = (Button) this
+				.findViewById(R.id.btn_left_menu_setting);
+		btn_left_menu_setting.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				ToastUtil.makeToastInBottom("setting");
+			}
+		});
+
+		ll_main_menu_right = (LinearLayout) this
+				.findViewById(R.id.ll_main_menu_right);
+
+		ll_right_toolmenu = (LinearLayout) this
+				.findViewById(R.id.ll_right_toolmenu);
+
+		ll_main_layermanager = (LinearLayout) this
+				.findViewById(R.id.ll_main_layermanager);
+
+		ll_main_right_title = (LinearLayout) this
+				.findViewById(R.id.ll_main_right_title);
+		ll_main_list_left = (LinearLayout) this
+				.findViewById(R.id.ll_main_list_left);
+		rl_main_scale = (RelativeLayout) this.findViewById(R.id.rl_main_scale);
+		txt_main_scale_down = (TextView) this
+				.findViewById(R.id.txt_main_scale_down);
+		txt_main_scale = (TextView) this.findViewById(R.id.txt_main_scale);
+		txt_main_scale_lever = (TextView) this
+				.findViewById(R.id.txt_main_scale_lever);
+		Constants.ll_left_menu = ll_main_menu_left;
+		Constants.ll_right_menu = ll_main_menu_right;
+
+	}
+
+	/**
+	 * 左侧导航初始化
+	 * 
+	 * @param modules
+	 */
+	private void initLeftMenuView(final List<Module> modules, int press) {
+		// TODO Auto-generated method stub
+		ll_main_menu_left_content.removeAllViews();
+		if (modules == null || modules.size() == 0)
+			return;
+		for (int i = 0; i < modules.size(); i++) {
+			final int index = i;
+			final Button button_nomal = new Button(mContext);
+			button_nomal.setBackgroundResource(getRidByName(modules.get(index)
+					.getImg_nomal()));
+
+			final Button button_press = new Button(mContext);
+			button_press.setBackgroundResource(getRidByName(modules.get(index)
+					.getImg_press()));
+
+			if (press == index) {
+				button_press.setVisibility(View.VISIBLE);
+				button_nomal.setVisibility(View.GONE);
+				// button_press.setText(modules.get(i).getTitle());
+				button_press.setLayoutParams(new LinearLayout.LayoutParams(
+						LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+				button_press.setGravity(Gravity.CENTER);
+				button_press.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						initLeftMenuView(modules, index);
+						// ToastUtil.makeToastInBottom(index + "");
+						// 这里是位置显示方式,在按钮的左下角
+						showPopWindow(button_nomal, index);
+
+					}
+				});
+			} else {
+				button_nomal.setVisibility(View.VISIBLE);
+				button_press.setVisibility(View.GONE);
+				// button_nomal.setText(modules.get(i).getTitle());
+				button_nomal.setLayoutParams(new LinearLayout.LayoutParams(
+						LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+				button_nomal.setGravity(Gravity.CENTER);
+				button_nomal.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						initLeftMenuView(modules, index);
+						// ToastUtil.makeToastInBottom(index + "");
+						showPopWindow(button_nomal, index);
+					}
+				});
+			}
+
+			ll_main_menu_left_content.addView(button_nomal);
+			ll_main_menu_left_content.addView(button_press);
+
+		}
+
+	}
+
+	/**
+	 * 显示pop
+	 * 
+	 * @param view
+	 * @param index
+	 */
+
+	void showPopWindow(View view, int index) {
+
+		switch (index) {
+		case 0:
+			ll_web.setVisibility(View.GONE);
+
+			ll_main_list_left
+					.setVisibility(ll_main_list_left.getVisibility() != View.VISIBLE ? View.VISIBLE
+							: View.GONE);
+
+			if (ll_main_list_left.getVisibility() == View.VISIBLE) {
+				if (!isFirst) {
+					isFirst = true;
+					if (!DateUtil.isFastDoubleClick()) {
+						mainLeftListView.initView();
+					}
+
+				}
+				rl_main_scale.setVisibility(View.GONE);
+
+			} else {
+				rl_main_scale.setVisibility(View.VISIBLE);
+			}
+			break;
+
+		case 1:
+			ll_main_list_left.setVisibility(View.GONE);
+
+			ll_web.setVisibility(ll_main_list_left.getVisibility() != View.VISIBLE ? View.VISIBLE
+					: View.GONE);
+
+			if (ll_web.getVisibility() == View.VISIBLE) {
+				if (!isWebFirst) {
+					isWebFirst = true;
+					mainWebView.initView();
+				}
+
+			} else {
+				rl_main_scale.setVisibility(View.VISIBLE);
+			}
+
+			break;
+
+		case 2:
+
+			break;
+
+		case 3:
+
+			break;
+
+		default:
+			break;
+		}
+
+	}
+
+	protected int getRidByName(String name) {
+		Class drawable = R.drawable.class;
+		Field field = null;
+		try {
+			field = drawable.getField(name);
+			int r_id = field.getInt(field.getName());
+			return r_id;
+		} catch (Exception e) {
+			Log.e("ERROR", "PICTURE NOT　FOUND!");
+		}
+		return 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.android.smartmobile.cz.interf.InitActivity#clearView()
+	 */
+	@Override
+	public void clearView() {
+		// TODO Auto-generated method stub
+		List<PopupWindow> list = MyApplication.mApp.popupWindows;
+		if (list.size() > 0) {
+			for (int i = 0; i < list.size(); i++) {
+				PopupWindow popupWindow = list.get(i);
+				if (popupWindow != null && popupWindow.isShowing()) {
+					popupWindow.dismiss();
+					popupWindow = null;
+				}
+			}
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		mapView.pause();
+	}
+
+}

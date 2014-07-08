@@ -1,0 +1,79 @@
+package com.android.smartmobile.cz.view;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.widget.Toast;
+
+import com.esri.android.map.Callout;
+import com.esri.android.map.MapView;
+import com.esri.android.map.event.OnSingleTapListener;
+import com.esri.android.map.event.OnStatusChangedListener;
+import com.esri.core.geometry.Envelope;
+
+/**
+ * 
+ * @ClassName: MainMapView
+ * @Description: 常州移动规划MapView
+ * @author 
+ * @date 2013-7-31 上午9:28:49
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ */
+
+public class MainMapView extends MapView {
+
+	private static final String TAG = "MainMapView";
+	private MainMapView mapview;
+	private Context mContext;
+	private final Callout mCallout;
+
+	public MainMapView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+	//	initializeMapView(this);
+		// VectorMapFromShap();
+		mapview = this;
+		this.mContext = context;
+		mCallout = this.getCallout();
+	}
+
+	@SuppressWarnings("unused")
+	private void initializeMapView(MapView mapView) { // initExtent="121.08048967408389 31.146276579987304 121.85983232592181 31.31889258148204"
+		Envelope evn = new Envelope();
+		evn.setXMin(121.08048967408389);
+		evn.setYMin(31.146276579987304);
+		evn.setXMax(121.85983232592181);
+		evn.setYMax(31.31889258148204);
+		mapView.setExtent(evn);
+		// mapView.setScale(72142.9684010827);
+		this.setOnSingleTapListener(onSingleTapListener);
+		// this.setOnStatusChangedListener(onStatusChange);
+	}
+
+	private OnStatusChangedListener onStatusChange = new OnStatusChangedListener() {
+
+		/**
+		 * @Fields serialVersionUID : TODO(用一句话描述这个变量表示什么)
+		 */
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public void onStatusChanged(Object arg0, STATUS arg1) {
+
+		}
+	};
+
+	private OnSingleTapListener onSingleTapListener = new OnSingleTapListener() {
+
+		@Override
+		public void onSingleTap(float x, float y) {
+			// TODO Auto-generated method stub
+			if (!isLoaded()) {
+				Toast.makeText(mContext, "test", Toast.LENGTH_SHORT).show();
+				return;
+			}
+
+		}
+	};
+
+}

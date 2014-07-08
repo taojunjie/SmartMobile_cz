@@ -1,0 +1,25 @@
+package com.android.smartmobile.cz.bean;
+
+import java.util.List;
+
+public class TitleBean {
+	String name = "";
+	List<AddressBean> groupLayers;
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<AddressBean> getGroupLayers() {
+		return groupLayers;
+	}
+
+	public void setGroupLayers(List<AddressBean> groupLayers) {
+		this.groupLayers = groupLayers;
+	}
+
+}

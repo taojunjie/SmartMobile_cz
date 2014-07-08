@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AnimationFade">
+
+        <!-- PopupWindow左右弹出的效果 -->
+        <item name="android:windowEnterAnimation">@anim/in_left2right</item>
+        <item name="android:windowExitAnimation">@anim/out_right2left</item>
+    </style>
+
+    <style name="AnimationFade_web">
+
+        <!-- PopupWindow上下弹出的效果 -->
+        <item name="android:windowEnterAnimation">@anim/web_in_left2right</item>
+        <item name="android:windowExitAnimation">@anim/web_out_right2left</item>
+    </style>
+
+</resources>

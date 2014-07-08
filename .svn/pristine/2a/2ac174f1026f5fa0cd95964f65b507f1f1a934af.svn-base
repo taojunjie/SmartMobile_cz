@@ -1,0 +1,19 @@
+package com.android.smartmobile.cz.service;
+
+import java.util.List;
+
+import android.os.AsyncTask;
+
+public class GetDataAsyncTask extends AsyncTask<String, Void, List<String>> {
+
+	public GetDataAsyncTask() {
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	protected List<String> doInBackground(String... params) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

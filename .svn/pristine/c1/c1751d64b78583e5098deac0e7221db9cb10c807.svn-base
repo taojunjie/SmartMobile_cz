@@ -1,0 +1,61 @@
+package com.android.smartmobile.cz.db;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
+
+import com.android.smartmobile.cz.util.StringUtil;
+
+import jsqlite.TableResult;
+
+public class SDBHelper {
+
+	public SDBHelper() {
+		// TODO Auto-generated constructor stub
+		mDatabaseHelper = new DatabaseHelper();
+	}
+
+	public DatabaseHelper mDatabaseHelper;
+
+	/**
+	 * 执行sql语句
+	 * 
+	 * @param string
+	 * @throws jsqlite.Exception
+	 */
+	public ArrayList<HashMap<String, String>> getResultByName(String tableName,
+			String condition) throws jsqlite.Exception {
+		String sql = "";
+		if (!StringUtil.isEmpty(tableName)) {
+			if (StringUtil.isEmpty(condition)) {
+				sql = "SELECT *FROM '" + tableName + "' limit 100";
+			} else {
+				sql = "SELECT *FROM '" + tableName
+						+ "' WHERE TEXTSTRING LIKE '%" + condition + "%' limit 100";
+			}
+
+		}
+		if (StringUtil.isEmpty(sql))
+			return null;
+		ArrayList<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+		TableResult result = mDatabaseHelper.getSPDatabase().get_table(sql);
+		HashMap<String, String> map = null;
+		if (null == result) {
+			return null;
+		}
+		String[] arrayColum = result.column;
+		Vector<String[]> vector = result.rows;
+
+		for (int j = 0; j < vector.size(); j++) {
+			map = new HashMap<String, String>();
+			String[] columnStrings = vector.get(j);
+			for (int i = 0; i < columnStrings.length; i++) {
+				map.put(arrayColum[i], columnStrings[i]);
+			}
+			list.add(map);
+		}
+		return list;
+	}
+
+}

@@ -1,0 +1,124 @@
+/**
+ * 
+ */
+package com.android.smartmobile.cz.adapter;
+
+import java.util.List;
+
+import com.android.smartmobile.cz.R;
+import com.esri.core.map.Legend;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+/**
+ * 
+ * @ClassName: ListAdapter
+ * @Description:
+ * @author Administrator
+ * @date 2013年8月5日 下午2:01:36
+ * @Company: www.shdci.com
+ * @Copyright: Copyright (c) 2013 All rights reserved.
+ * @version
+ */
+public class LegendAdapter extends BaseAdapter {
+	private Context mContext;
+	private List<Legend> mList;
+	LayoutInflater localinflater;
+
+	/**
+	 * 
+	 */
+	public LegendAdapter(Context context, List<Legend> list) {
+		// TODO Auto-generated constructor stub
+		this.mContext = context;
+		this.mList = list;
+		localinflater = (LayoutInflater) context
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.Adapter#getCount()
+	 */
+	@Override
+	public int getCount() {
+		// TODO Auto-generated method stub
+		return mList.size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.Adapter#getItem(int)
+	 */
+	@Override
+	public Object getItem(int position) {
+		// TODO Auto-generated method stub
+		return mList.get(position);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.Adapter#getItemId(int)
+	 */
+	@Override
+	public long getItemId(int position) {
+		// TODO Auto-generated method stub
+		return position;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.Adapter#getView(int, android.view.View,
+	 * android.view.ViewGroup)
+	 */
+	@SuppressLint("ResourceAsColor")
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		// TODO Auto-generated method stub
+		ViewHolder holder;
+		if (convertView == null) {
+			convertView = localinflater
+					.inflate(R.layout.item_legend_info, null);
+
+			holder = new ViewHolder();
+			holder.img_item_legend = (ImageView) convertView
+					.findViewById(R.id.img_item_legend);
+			holder.txt_item_legend_name = (TextView) convertView
+					.findViewById(R.id.txt_item_legend_name);
+
+			convertView.setTag(holder);
+		} else {
+			holder = (ViewHolder) convertView.getTag();
+		}
+
+		holder.txt_item_legend_name.setText(mList.get(position).getLabel());
+		if (mList.get(position).getImage() != null) {
+			holder.img_item_legend.setImageBitmap(mList.get(position)
+					.getImage());
+		}
+
+		if (position % 2 == 0) {
+			convertView.setBackgroundResource(R.drawable.lv_bg_ou);
+		} else {
+			convertView.setBackgroundResource(R.drawable.lv_bg);
+		}
+		return convertView;
+	}
+
+	static class ViewHolder {
+		ImageView img_item_legend;
+		TextView txt_item_legend_name;
+	}
+
+}
